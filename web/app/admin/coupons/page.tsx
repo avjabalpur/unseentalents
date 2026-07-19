@@ -10,11 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 
 export default function AdminCouponsPage() {
   const { data: coupons, isLoading } = useAdminCoupons();
   const createCoupon = useCreateCoupon();
 
+  const [formOpen, setFormOpen] = useState(false);
   const [code, setCode] = useState("");
   const [creditValue, setCreditValue] = useState(5);
   const [maxRedemptions, setMaxRedemptions] = useState(100);
@@ -27,6 +29,7 @@ export default function AdminCouponsPage() {
         onSuccess: () => {
           toast.success("Coupon created.");
           setCode("");
+          setFormOpen(false);
         },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create coupon."),
       },
@@ -37,40 +40,40 @@ export default function AdminCouponsPage() {
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">Coupons</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create coupon</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label>Code</Label>
-              <Input value={code} onChange={(e) => setCode(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Credit value</Label>
-              <Input
-                type="number"
-                min={1}
-                value={creditValue}
-                onChange={(e) => setCreditValue(Number(e.target.value))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Max redemptions</Label>
-              <Input
-                type="number"
-                min={1}
-                value={maxRedemptions}
-                onChange={(e) => setMaxRedemptions(Number(e.target.value))}
-              />
-            </div>
-            <Button type="submit" className="sm:col-span-3 sm:w-fit" disabled={createCoupon.isPending}>
-              {createCoupon.isPending ? "Creating…" : "Create coupon"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <CollapsibleFormCard
+        title="Create coupon"
+        triggerLabel="Add coupon"
+        open={formOpen}
+        onOpenChange={setFormOpen}
+      >
+        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label>Code</Label>
+            <Input value={code} onChange={(e) => setCode(e.target.value)} required />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Credit value</Label>
+            <Input
+              type="number"
+              min={1}
+              value={creditValue}
+              onChange={(e) => setCreditValue(Number(e.target.value))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Max redemptions</Label>
+            <Input
+              type="number"
+              min={1}
+              value={maxRedemptions}
+              onChange={(e) => setMaxRedemptions(Number(e.target.value))}
+            />
+          </div>
+          <Button type="submit" className="sm:col-span-3 sm:w-fit" disabled={createCoupon.isPending}>
+            {createCoupon.isPending ? "Creating…" : "Create coupon"}
+          </Button>
+        </form>
+      </CollapsibleFormCard>
 
       <Card>
         <CardHeader>

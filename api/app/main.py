@@ -21,6 +21,7 @@ from app.routers import (
     prizes,
     slides,
     stages,
+    stats,
     submissions,
     topics,
     users,
@@ -76,6 +77,7 @@ for router in (
     slides.router,
     contact.router,
     comments.router,
+    stats.router,
 ):
     app.include_router(router, prefix=settings.api_prefix)
 

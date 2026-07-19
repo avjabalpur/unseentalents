@@ -4,10 +4,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAdminUsers, useGrantCredit } from "@/lib/hooks/useAdmin";
 import { ApiError } from "@/lib/api-client";
+import type { UserRole } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function AdminUsersPage() {
@@ -15,13 +17,48 @@ export default function AdminUsersPage() {
   const grantCredit = useGrantCredit();
   const [amounts, setAmounts] = useState<Record<string, number>>({});
 
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL");
+
+  const filteredUsers = (users ?? []).filter((u) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      !q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-semibold">Users</h1>
       <Card>
-        <CardContent className="pt-6">
+        <CardHeader>
+          <CardTitle>All users</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 flex flex-wrap gap-3">
+            <Input
+              placeholder="Search by name, username, or email…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-xs"
+            />
+            <Select value={roleFilter} onValueChange={(v) => v && setRoleFilter(v as UserRole | "ALL")}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All roles</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="USER">User</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {isLoading ? (
             <p className="text-muted-foreground">Loading…</p>
+          ) : filteredUsers.length === 0 ? (
+            <p className="text-muted-foreground">No users match your filters.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -34,7 +71,7 @@ export default function AdminUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users?.map((u) => (
+                {filteredUsers.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.name}</TableCell>
                     <TableCell>{u.email}</TableCell>

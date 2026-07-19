@@ -10,12 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 
 export default function AdminSlidesPage() {
   const { data: slides, isLoading } = useAdminSlides();
   const createSlide = useCreateSlide();
   const updateSlide = useUpdateSlide();
 
+  const [formOpen, setFormOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
@@ -40,6 +42,7 @@ export default function AdminSlidesPage() {
           setImage(null);
           setMobileImage(null);
           setOrderIndex((n) => n + 1);
+          setFormOpen(false);
         },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create slide."),
       },
@@ -54,50 +57,37 @@ export default function AdminSlidesPage() {
         crops correctly; mobile falls back to the desktop image if omitted.
       </p>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add slide</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Title (optional)</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Subtitle (optional)</Label>
-              <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Link URL (optional)</Label>
-              <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="/events/..." />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Order</Label>
-              <Input
-                type="number"
-                value={orderIndex}
-                onChange={(e) => setOrderIndex(Number(e.target.value))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Desktop image</Label>
-              <Input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Mobile image (optional)</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setMobileImage(e.target.files?.[0] ?? null)}
-              />
-            </div>
-            <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createSlide.isPending}>
-              {createSlide.isPending ? "Uploading…" : "Add slide"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <CollapsibleFormCard title="Add slide" triggerLabel="Add slide" open={formOpen} onOpenChange={setFormOpen}>
+        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Title (optional)</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Subtitle (optional)</Label>
+            <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Link URL (optional)</Label>
+            <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="/events/..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Order</Label>
+            <Input type="number" value={orderIndex} onChange={(e) => setOrderIndex(Number(e.target.value))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Desktop image</Label>
+            <Input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Mobile image (optional)</Label>
+            <Input type="file" accept="image/*" onChange={(e) => setMobileImage(e.target.files?.[0] ?? null)} />
+          </div>
+          <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createSlide.isPending}>
+            {createSlide.isPending ? "Uploading…" : "Add slide"}
+          </Button>
+        </form>
+      </CollapsibleFormCard>
 
       <Card>
         <CardHeader>

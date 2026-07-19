@@ -12,12 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 
 export default function AdminEventTypesPage() {
   const { data: eventTypes, isLoading } = useEventTypes();
   const createEventType = useCreateEventType();
   const uploadImage = useUploadEventTypeImage();
 
+  const [formOpen, setFormOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [mediaType, setMediaType] = useState<MediaType>("VIDEO");
@@ -31,6 +33,7 @@ export default function AdminEventTypesPage() {
           toast.success("Event type created.");
           setName("");
           setDescription("");
+          setFormOpen(false);
         },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create event type."),
       },
@@ -52,38 +55,38 @@ export default function AdminEventTypesPage() {
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">Event Types</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create event type</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Submission type</Label>
-              <Select value={mediaType} onValueChange={(v) => v && setMediaType(v as MediaType)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VIDEO">Video</SelectItem>
-                  <SelectItem value="IMAGE">Image</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>Description</Label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)} />
-            </div>
-            <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createEventType.isPending}>
-              {createEventType.isPending ? "Creating…" : "Create event type"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <CollapsibleFormCard
+        title="Create event type"
+        triggerLabel="Add event type"
+        open={formOpen}
+        onOpenChange={setFormOpen}
+      >
+        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Submission type</Label>
+            <Select value={mediaType} onValueChange={(v) => v && setMediaType(v as MediaType)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="VIDEO">Video</SelectItem>
+                <SelectItem value="IMAGE">Image</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Description</Label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+          </div>
+          <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createEventType.isPending}>
+            {createEventType.isPending ? "Creating…" : "Create event type"}
+          </Button>
+        </form>
+      </CollapsibleFormCard>
 
       <Card>
         <CardHeader>

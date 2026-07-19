@@ -146,6 +146,20 @@ export interface Coupon {
   status: CouponStatus;
 }
 
+export interface CountItem {
+  label: string;
+  count: number;
+}
+
+export interface AdminStats {
+  submissionsByEvent: CountItem[];
+  submissionsByEventType: CountItem[];
+  submissionsByStatus: CountItem[];
+  votesByEvent: CountItem[];
+  usersByRole: CountItem[];
+  eventsByStatus: CountItem[];
+}
+
 export interface ContactMessage {
   id: string;
   name: string;

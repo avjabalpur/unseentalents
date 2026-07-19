@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 
 const STAGE_NAMES: StageName[] = [
   "BACKSTAGE",
@@ -42,6 +43,7 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
   const createStage = useCreateStage(eventId);
   const closeStage = useCloseStage();
 
+  const [formOpen, setFormOpen] = useState(false);
   const [name, setName] = useState<StageName>("BACKSTAGE");
   const [orderIndex, setOrderIndex] = useState(1);
   const [startAt, setStartAt] = useState(toDatetimeLocalValue(new Date()));
@@ -65,6 +67,7 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
         onSuccess: () => {
           toast.success("Stage created.");
           setOrderIndex((n) => n + 1);
+          setFormOpen(false);
         },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create stage."),
       },
@@ -87,73 +90,63 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
         {event?.description && <p className="mt-1 text-sm text-muted-foreground">{event.description}</p>}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add stage</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
+      <CollapsibleFormCard title="Add stage" triggerLabel="Add stage" open={formOpen} onOpenChange={setFormOpen}>
+        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Stage</Label>
+            <Select value={name} onValueChange={(v) => v && setName(v as StageName)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STAGE_NAMES.map((n) => (
+                  <SelectItem key={n} value={n}>
+                    {n.replace("_", " ")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Order</Label>
+            <Input type="number" min={1} value={orderIndex} onChange={(e) => setOrderIndex(Number(e.target.value))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Start</Label>
+            <Input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>End</Label>
+            <Input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Advancement rule</Label>
+            <Select value={advanceMode} onValueChange={(v) => v && setAdvanceMode(v as AdvanceMode)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ADMIN_CURATED">Admin curated</SelectItem>
+                <SelectItem value="AUTO_TOP_N">Auto top N</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {advanceMode === "AUTO_TOP_N" && (
             <div className="space-y-1.5">
-              <Label>Stage</Label>
-              <Select value={name} onValueChange={(v) => v && setName(v as StageName)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STAGE_NAMES.map((n) => (
-                    <SelectItem key={n} value={n}>
-                      {n.replace("_", " ")}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Order</Label>
+              <Label>Advance top N</Label>
               <Input
                 type="number"
                 min={1}
-                value={orderIndex}
-                onChange={(e) => setOrderIndex(Number(e.target.value))}
+                value={advanceCount}
+                onChange={(e) => setAdvanceCount(Number(e.target.value))}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label>Start</Label>
-              <Input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>End</Label>
-              <Input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Advancement rule</Label>
-              <Select value={advanceMode} onValueChange={(v) => v && setAdvanceMode(v as AdvanceMode)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ADMIN_CURATED">Admin curated</SelectItem>
-                  <SelectItem value="AUTO_TOP_N">Auto top N</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {advanceMode === "AUTO_TOP_N" && (
-              <div className="space-y-1.5">
-                <Label>Advance top N</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={advanceCount}
-                  onChange={(e) => setAdvanceCount(Number(e.target.value))}
-                />
-              </div>
-            )}
-            <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createStage.isPending}>
-              {createStage.isPending ? "Creating…" : "Add stage"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          )}
+          <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createStage.isPending}>
+            {createStage.isPending ? "Creating…" : "Add stage"}
+          </Button>
+        </form>
+      </CollapsibleFormCard>
 
       <Card>
         <CardHeader>

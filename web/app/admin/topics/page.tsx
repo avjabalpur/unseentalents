@@ -13,6 +13,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 
 const EMPTY_FORM: TopicPayload = {
   key: "",
@@ -28,6 +29,7 @@ export default function AdminTopicsPage() {
   const createTopic = useCreateTopic();
   const updateTopic = useUpdateTopic();
 
+  const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<TopicPayload>(EMPTY_FORM);
 
@@ -41,11 +43,13 @@ export default function AdminTopicsPage() {
       featured: topic.featured,
       status: topic.status,
     });
+    setFormOpen(true);
   };
 
   const resetForm = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setFormOpen(false);
   };
 
   const handleSubmit = () => {
@@ -73,6 +77,18 @@ export default function AdminTopicsPage() {
 
   const isSaving = createTopic.isPending || updateTopic.isPending;
 
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<TopicStatus | "ALL">("ALL");
+
+  const filteredTopics = (topics ?? []).filter((topic) => {
+    const matchesSearch =
+      !search ||
+      topic.title.toLowerCase().includes(search.toLowerCase()) ||
+      topic.key.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "ALL" || topic.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">Topics (CMS pages)</h1>
@@ -81,11 +97,13 @@ export default function AdminTopicsPage() {
         /pages/[key]. Mark a topic &quot;featured&quot; to show it as a teaser block on the home page.
       </p>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingId ? "Edit topic" : "Create topic"}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <CollapsibleFormCard
+        title={editingId ? "Edit topic" : "Create topic"}
+        triggerLabel="Add topic"
+        open={formOpen}
+        onOpenChange={(next) => (next ? setFormOpen(true) : resetForm())}
+      >
+        <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Key (used in URL /pages/key)</Label>
@@ -151,16 +169,36 @@ export default function AdminTopicsPage() {
               </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </CollapsibleFormCard>
 
       <Card>
         <CardHeader>
           <CardTitle>All topics</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex flex-wrap gap-3">
+            <Input
+              placeholder="Search by title or key…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-xs"
+            />
+            <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v as TopicStatus | "ALL")}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All statuses</SelectItem>
+                <SelectItem value="DRAFT">Draft</SelectItem>
+                <SelectItem value="PUBLISHED">Published</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {isLoading ? (
             <p className="text-muted-foreground">Loading…</p>
+          ) : filteredTopics.length === 0 ? (
+            <p className="text-muted-foreground">No topics match your filters.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -173,7 +211,7 @@ export default function AdminTopicsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topics?.map((topic) => (
+                {filteredTopics.map((topic) => (
                   <TableRow key={topic.id}>
                     <TableCell className="font-mono text-sm">{topic.key}</TableCell>
                     <TableCell className="font-medium">{topic.title}</TableCell>

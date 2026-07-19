@@ -1,0 +1,66 @@
+from sqlmodel import func, select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.models.event import Event
+from app.models.event_type import EventType
+from app.models.participation import Participation
+from app.models.submission import Submission
+from app.models.user import User
+from app.models.vote import Vote
+from app.schemas.stats import AdminStats, CountItem
+
+
+def _to_items(rows) -> list[CountItem]:
+    items = []
+    for label, count in rows:
+        label_str = label.value if hasattr(label, "value") else str(label)
+        items.append(CountItem(label=label_str, count=count))
+    return items
+
+
+async def get_admin_stats(db: AsyncSession) -> AdminStats:
+    submissions_by_event = await db.exec(
+        select(Event.name, func.count(Submission.id))
+        .select_from(Submission)
+        .join(Participation, Participation.id == Submission.participation_id)
+        .join(Event, Event.id == Participation.event_id)
+        .group_by(Event.name)
+        .order_by(func.count(Submission.id).desc())
+    )
+
+    submissions_by_event_type = await db.exec(
+        select(EventType.name, func.count(Submission.id))
+        .select_from(Submission)
+        .join(Participation, Participation.id == Submission.participation_id)
+        .join(Event, Event.id == Participation.event_id)
+        .join(EventType, EventType.id == Event.event_type_id)
+        .group_by(EventType.name)
+        .order_by(func.count(Submission.id).desc())
+    )
+
+    submissions_by_status = await db.exec(
+        select(Submission.status, func.count(Submission.id)).group_by(Submission.status)
+    )
+
+    votes_by_event = await db.exec(
+        select(Event.name, func.count(Vote.id))
+        .select_from(Vote)
+        .join(Submission, Submission.id == Vote.submission_id)
+        .join(Participation, Participation.id == Submission.participation_id)
+        .join(Event, Event.id == Participation.event_id)
+        .group_by(Event.name)
+        .order_by(func.count(Vote.id).desc())
+    )
+
+    users_by_role = await db.exec(select(User.role, func.count(User.id)).group_by(User.role))
+
+    events_by_status = await db.exec(select(Event.status, func.count(Event.id)).group_by(Event.status))
+
+    return AdminStats(
+        submissions_by_event=_to_items(submissions_by_event.all()),
+        submissions_by_event_type=_to_items(submissions_by_event_type.all()),
+        submissions_by_status=_to_items(submissions_by_status.all()),
+        votes_by_event=_to_items(votes_by_event.all()),
+        users_by_role=_to_items(users_by_role.all()),
+        events_by_status=_to_items(events_by_status.all()),
+    )

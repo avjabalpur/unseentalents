@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 
 export function PrizesAdminClient({ eventId }: { eventId: string }) {
   const { data: event } = useEvent(eventId);
@@ -23,6 +24,7 @@ export function PrizesAdminClient({ eventId }: { eventId: string }) {
   const createPrize = useCreatePrize(eventId);
   const deletePrize = useDeletePrize(eventId);
 
+  const [formOpen, setFormOpen] = useState(false);
   const [rank, setRank] = useState(1);
   const [title, setTitle] = useState("");
   const [reward, setReward] = useState("");
@@ -37,6 +39,7 @@ export function PrizesAdminClient({ eventId }: { eventId: string }) {
           setRank((n) => n + 1);
           setTitle("");
           setReward("");
+          setFormOpen(false);
         },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to add prize."),
       },
@@ -61,40 +64,40 @@ export function PrizesAdminClient({ eventId }: { eventId: string }) {
         {event?.description && <p className="mt-1 text-sm text-muted-foreground">{event.description}</p>}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add a prize</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label>Rank</Label>
-              <Input type="number" min={1} value={rank} onChange={(e) => setRank(Number(e.target.value))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Title</Label>
-              <Input
-                placeholder="e.g. 1st Place, Winner, Best Newcomer"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Reward</Label>
-              <Input
-                placeholder="e.g. $500 Cash, $100 Amazon Voucher"
-                value={reward}
-                onChange={(e) => setReward(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="sm:col-span-3 sm:w-fit" disabled={createPrize.isPending}>
-              {createPrize.isPending ? "Adding…" : "Add prize"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <CollapsibleFormCard
+        title="Add a prize"
+        triggerLabel="Add prize"
+        open={formOpen}
+        onOpenChange={setFormOpen}
+      >
+        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label>Rank</Label>
+            <Input type="number" min={1} value={rank} onChange={(e) => setRank(Number(e.target.value))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Title</Label>
+            <Input
+              placeholder="e.g. 1st Place, Winner, Best Newcomer"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Reward</Label>
+            <Input
+              placeholder="e.g. $500 Cash, $100 Amazon Voucher"
+              value={reward}
+              onChange={(e) => setReward(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" className="sm:col-span-3 sm:w-fit" disabled={createPrize.isPending}>
+            {createPrize.isPending ? "Adding…" : "Add prize"}
+          </Button>
+        </form>
+      </CollapsibleFormCard>
 
       <Card>
         <CardHeader>
