@@ -44,6 +44,9 @@ export function SubmissionCard({ submission, rank, action }: SubmissionCardProps
           {formatDate(submission.uploadedAt)}
           {submission.ownerUsername && <> · by @{submission.ownerUsername}</>}
         </p>
+        {submission.eventName && (
+          <p className="mt-1 truncate text-xs uppercase tracking-wide text-primary/80">{submission.eventName}</p>
+        )}
         {submission.notes && (
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{submission.notes}</p>
         )}

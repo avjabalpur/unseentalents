@@ -10,6 +10,7 @@ import { useComments, useCreateComment } from "@/lib/hooks/useComments";
 import { ApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function formatCommentDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -65,7 +66,14 @@ export function CommentSection({ submissionId }: { submissionId: string }) {
       )}
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading comments…</p>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="space-y-2 border-b border-white/10 pb-4 last:border-0">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          ))}
+        </div>
       ) : !comments || comments.length === 0 ? (
         <p className="text-sm text-muted-foreground">No comments yet — be the first to say something.</p>
       ) : (

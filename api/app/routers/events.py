@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -9,6 +10,7 @@ from app.models.enums import UserRole
 from app.models.user import User
 from app.schemas.event import EventCreate, EventRead, EventUpdate
 from app.schemas.participation import ParticipationRead
+from app.schemas.stage import StageRead
 from app.services import event_service, participation_service, stage_service
 
 router = APIRouter(prefix="/events", tags=["events"])
@@ -18,6 +20,16 @@ async def _to_read(db: AsyncSession, event) -> EventRead:
     stages = await stage_service.list_stages_for_event(db, event.id)
     data = EventRead.model_validate(event)
     data.computed_status = event_service.compute_event_status(stages)
+
+    if stages:
+        ordered = sorted(stages, key=lambda s: s.order_index)
+        data.first_stage_start_at = ordered[0].start_at
+        data.final_stage_end_at = ordered[-1].end_at
+        now = datetime.now(timezone.utc)
+        current = next((s for s in ordered if s.start_at <= now <= s.end_at), None)
+        data.current_stage_name = current.name.value if current else None
+        data.stages = [StageRead.model_validate(s) for s in ordered]
+
     return data
 
 

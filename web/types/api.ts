@@ -35,6 +35,7 @@ export interface User {
   role: UserRole;
   status: UserStatus;
   creditBalance: number;
+  createdAt: string;
 }
 
 export interface EventType {
@@ -51,7 +52,12 @@ export interface Event {
   description: string | null;
   eventTypeId: string;
   status: EventStatus;
+  createdAt: string;
   computedStatus: ComputedEventStatus | null;
+  currentStageName: StageName | null;
+  firstStageStartAt: string | null;
+  finalStageEndAt: string | null;
+  stages: Stage[];
 }
 
 export interface Stage {
@@ -149,6 +155,13 @@ export interface Coupon {
 export interface CountItem {
   label: string;
   count: number;
+}
+
+export interface PublicSummary {
+  eventsCount: number;
+  categoriesCount: number;
+  submissionsCount: number;
+  prizesCount: number;
 }
 
 export interface AdminStats {

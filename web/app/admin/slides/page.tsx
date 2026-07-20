@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 
 export default function AdminSlidesPage() {
@@ -95,7 +96,7 @@ export default function AdminSlidesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <TableSkeleton columns={5} />
           ) : (
             <Table>
               <TableHeader>

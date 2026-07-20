@@ -11,7 +11,14 @@ from app.models.enums import UserRole
 from app.models.submission import Submission
 from app.models.user import User
 from app.schemas.submission import SubmissionRead
-from app.services import event_service, event_type_service, participation_service, stage_service, submission_service
+from app.services import (
+    event_service,
+    event_type_service,
+    participation_service,
+    stage_service,
+    submission_service,
+    vote_service,
+)
 
 router = APIRouter(tags=["submissions"])
 
@@ -81,6 +88,18 @@ async def get_submission(submission_id: uuid.UUID, db: AsyncSession = Depends(ge
 @router.get("/users/me/submissions", response_model=list[SubmissionRead])
 async def list_my_submissions(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
     rows = await submission_service.list_submissions_for_user(db, current_user.id)
+    reads = []
+    for submission, event_name, event_id in rows:
+        data = await _to_read(db, submission)
+        data.event_name = event_name
+        data.event_id = event_id
+        reads.append(data)
+    return reads
+
+
+@router.get("/users/me/votes", response_model=list[SubmissionRead])
+async def list_my_votes(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+    rows = await vote_service.list_votes_for_user(db, current_user.id)
     reads = []
     for submission, event_name, event_id in rows:
         data = await _to_read(db, submission)

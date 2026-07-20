@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 export default function AdminEventsPage() {
   const { data: events, isLoading } = useAdminEvents();
@@ -87,7 +88,7 @@ export default function AdminEventsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <TableSkeleton columns={5} />
           ) : (
             <Table>
               <TableHeader>

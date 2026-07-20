@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 const STAGE_NAMES: StageName[] = [
   "BACKSTAGE",
@@ -154,7 +155,7 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <TableSkeleton columns={5} />
           ) : (
             <Table>
               <TableHeader>
@@ -236,7 +237,7 @@ function StageResultsPanel({ stageId }: { stageId: string }) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-muted-foreground">Loading…</p>
+          <TableSkeleton columns={4} />
         ) : !results || results.length === 0 ? (
           <p className="text-muted-foreground">No results yet — close the stage to tally votes.</p>
         ) : (

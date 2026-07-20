@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MediaPlayer } from "@/components/shared/MediaPlayer";
+import { CardGridSkeleton } from "@/components/admin/CardGridSkeleton";
 
 export default function AdminModerationPage() {
   const { data: submissions, isLoading } = usePendingSubmissions();
@@ -17,7 +18,7 @@ export default function AdminModerationPage() {
       <h1 className="mb-6 text-2xl font-semibold">Moderation queue</h1>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Loading…</p>
+        <CardGridSkeleton />
       ) : !submissions || submissions.length === 0 ? (
         <p className="text-muted-foreground">Nothing pending — you&apos;re all caught up.</p>
       ) : (

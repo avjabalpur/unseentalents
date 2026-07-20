@@ -21,3 +21,8 @@ class LoginRequest(CamelModel):
 class TokenResponse(CamelModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class ChangePasswordRequest(CamelModel):
+    current_password: str
+    new_password: str = Field(min_length=8)

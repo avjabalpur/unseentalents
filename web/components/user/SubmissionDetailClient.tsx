@@ -4,11 +4,14 @@ import { ThumbsUp } from "lucide-react";
 import { mediaUrl } from "@/lib/api-client";
 import { formatDate } from "@/lib/format";
 import type { Submission } from "@/types/api";
+import { useSubmission } from "@/lib/hooks/useSubmissions";
 import { MediaPlayer } from "@/components/shared/MediaPlayer";
 import { VoteButton } from "@/components/user/VoteButton";
 import { CommentSection } from "@/components/user/CommentSection";
 
-export function SubmissionDetailClient({ submission }: { submission: Submission }) {
+export function SubmissionDetailClient({ submission: initialSubmission }: { submission: Submission }) {
+  const { data } = useSubmission(initialSubmission.id, initialSubmission);
+  const submission = data ?? initialSubmission;
   const posterUrl = mediaUrl(submission.thumbnailKey);
   const videoUrl = submission.mediaType === "VIDEO" ? mediaUrl(submission.storageKey) : null;
   const imageUrl = submission.mediaType === "IMAGE" ? mediaUrl(submission.storageKey) : null;

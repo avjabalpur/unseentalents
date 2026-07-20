@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 export default function AdminUsersPage() {
   const { data: users, isLoading } = useAdminUsers();
@@ -56,7 +57,7 @@ export default function AdminUsersPage() {
           </div>
 
           {isLoading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <TableSkeleton columns={5} />
           ) : filteredUsers.length === 0 ? (
             <p className="text-muted-foreground">No users match your filters.</p>
           ) : (

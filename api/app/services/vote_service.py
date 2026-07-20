@@ -1,9 +1,13 @@
+import uuid
+
 from fastapi import status
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.errors import AppError
 from app.models.enums import SubmissionStatus
+from app.models.participation import Participation
 from app.models.submission import Submission
 from app.models.user import User
 from app.models.vote import Vote
@@ -31,3 +35,20 @@ async def cast_vote(db: AsyncSession, submission: Submission, voter: User) -> Vo
         ) from exc
     await db.refresh(vote)
     return vote
+
+
+async def list_votes_for_user(db: AsyncSession, user_id: uuid.UUID) -> list[tuple[Submission, str, uuid.UUID]]:
+    """Returns (submission, event_name, event_id) tuples for every submission this user has voted
+    for, newest vote first — used by the account "My Votes" page."""
+    from app.models.event import Event
+
+    result = await db.exec(
+        select(Submission, Event.name, Event.id)
+        .select_from(Vote)
+        .join(Submission, Submission.id == Vote.submission_id)
+        .join(Participation, Participation.id == Submission.participation_id)
+        .join(Event, Event.id == Participation.event_id)
+        .where(Vote.voter_user_id == user_id)
+        .order_by(Vote.created_at.desc())
+    )
+    return [(row[0], row[1], row[2]) for row in result.all()]

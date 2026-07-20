@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 export default function AdminEventTypesPage() {
   const { data: eventTypes, isLoading } = useEventTypes();
@@ -94,7 +95,7 @@ export default function AdminEventTypesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <TableSkeleton columns={4} />
           ) : (
             <Table>
               <TableHeader>

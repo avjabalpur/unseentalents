@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -44,7 +45,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isLoading, user, router, pathname]);
 
   if (isLoading || !user || user.role !== "ADMIN") {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
+    return (
+      <div className="flex min-h-screen">
+        <aside className="flex h-screen w-64 shrink-0 flex-col gap-2 border-r border-white/10 bg-black p-4">
+          <Skeleton className="mb-4 h-9 w-32" />
+          {Array.from({ length: 9 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full rounded-lg" />
+          ))}
+        </aside>
+        <div className="flex-1 p-8">
+          <Skeleton className="mb-2 h-7 w-40" />
+          <Skeleton className="mb-6 h-4 w-64" />
+          <div className="grid gap-4 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 w-full rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

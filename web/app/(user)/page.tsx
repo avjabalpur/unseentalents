@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { API_BASE_URL } from "@/lib/api-client";
-import type { Event, Slide } from "@/types/api";
+import type { Event, PublicSummary, Slide } from "@/types/api";
 import { EventsBrowser } from "@/components/user/EventsBrowser";
 import { HeroSlider } from "@/components/user/HeroSlider";
 import { RoundsSlider } from "@/components/user/RoundsSlider";
 import { FeaturedTopicsSection } from "@/components/user/FeaturedTopicsSection";
 import { OurStorySection } from "@/components/user/OurStorySection";
 import { TopicExcerptSection } from "@/components/user/TopicExcerptSection";
+import { StatsStrip } from "@/components/user/StatsStrip";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { Button } from "@/components/ui/button";
 
@@ -30,8 +31,18 @@ async function getSlides(): Promise<Slide[]> {
   }
 }
 
+async function getSummary(): Promise<PublicSummary> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/v1/stats/summary`, { cache: "no-store" });
+    if (!res.ok) return { eventsCount: 0, categoriesCount: 0, submissionsCount: 0, prizesCount: 0 };
+    return (await res.json()) as PublicSummary;
+  } catch {
+    return { eventsCount: 0, categoriesCount: 0, submissionsCount: 0, prizesCount: 0 };
+  }
+}
+
 export default async function HomePage() {
-  const [events, slides] = await Promise.all([getEvents(), getSlides()]);
+  const [events, slides, summary] = await Promise.all([getEvents(), getSlides(), getSummary()]);
 
   return (
     <div>
@@ -75,6 +86,8 @@ export default async function HomePage() {
         </section>
       )}
 
+      <StatsStrip summary={summary} />
+
       <OurStorySection />
 
       <RoundsSlider />
@@ -95,6 +108,16 @@ export default async function HomePage() {
             <div className="h-full w-1/2 animate-pulse bg-primary" />
           </div>
           <EventsBrowser events={events} />
+
+          <div className="mt-10 flex justify-center">
+            <Button
+              variant="outline"
+              size="lg"
+              className="uppercase tracking-wide transition-transform duration-200 hover:scale-105 hover:border-primary"
+              nativeButton={false}
+              render={<Link href="/events">See every event &amp; competition</Link>}
+            />
+          </div>
         </FadeIn>
       </section>
     </div>

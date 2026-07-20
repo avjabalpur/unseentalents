@@ -13,6 +13,7 @@ import { MediaPlayer } from "@/components/shared/MediaPlayer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function findActiveStage(stages: Stage[]): Stage | null {
   const now = new Date();
@@ -21,7 +22,7 @@ function findActiveStage(stages: Stage[]): Stage | null {
 
 export function UploadWizard() {
   const { user } = useAuth();
-  const { data: eventTypes } = useEventTypes();
+  const { data: eventTypes, isLoading: eventTypesLoading } = useEventTypes();
   const { data: events } = useEvents();
 
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
@@ -33,7 +34,7 @@ export function UploadWizard() {
   const { data: participation } = useMyParticipation(selectedEventId ?? undefined, !!user && !!selectedEventId);
   const participate = useParticipate(selectedEventId ?? "");
 
-  const { data: mySubmissions } = useMySubmissions(!!user);
+  const { data: mySubmissions, isLoading: mySubmissionsLoading } = useMySubmissions(!!user);
 
   const filteredEvents = events?.filter((e) => e.eventTypeId === selectedTypeId) ?? [];
   const selectedEvent = events?.find((e) => e.id === selectedEventId);
@@ -60,7 +61,9 @@ export function UploadWizard() {
             <CardTitle>1. Choose a category</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
-            {eventTypes?.map((type) => (
+            {eventTypesLoading
+              ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)
+              : eventTypes?.map((type) => (
               <button
                 key={type.id}
                 type="button"
@@ -145,7 +148,9 @@ export function UploadWizard() {
       <div>
         <h2 className="mb-4 text-lg font-semibold uppercase tracking-wide">Your uploads</h2>
         <div className="space-y-4">
-          {!mySubmissions || mySubmissions.length === 0 ? (
+          {mySubmissionsLoading ? (
+            Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="aspect-video w-full rounded-lg" />)
+          ) : !mySubmissions || mySubmissions.length === 0 ? (
             <p className="text-sm text-muted-foreground">You haven&apos;t uploaded anything yet.</p>
           ) : (
             mySubmissions.map((submission) => {

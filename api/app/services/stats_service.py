@@ -1,13 +1,15 @@
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.models.enums import EventStatus, SubmissionStatus
 from app.models.event import Event
 from app.models.event_type import EventType
 from app.models.participation import Participation
+from app.models.prize import Prize
 from app.models.submission import Submission
 from app.models.user import User
 from app.models.vote import Vote
-from app.schemas.stats import AdminStats, CountItem
+from app.schemas.stats import AdminStats, CountItem, PublicSummary
 
 
 def _to_items(rows) -> list[CountItem]:
@@ -63,4 +65,22 @@ async def get_admin_stats(db: AsyncSession) -> AdminStats:
         votes_by_event=_to_items(votes_by_event.all()),
         users_by_role=_to_items(users_by_role.all()),
         events_by_status=_to_items(events_by_status.all()),
+    )
+
+
+async def get_public_summary(db: AsyncSession) -> PublicSummary:
+    events_count = (
+        await db.exec(select(func.count(Event.id)).where(Event.status == EventStatus.PUBLISHED))
+    ).one()
+    categories_count = (await db.exec(select(func.count(EventType.id)))).one()
+    submissions_count = (
+        await db.exec(select(func.count(Submission.id)).where(Submission.status == SubmissionStatus.APPROVED))
+    ).one()
+    prizes_count = (await db.exec(select(func.count(Prize.id)))).one()
+
+    return PublicSummary(
+        events_count=events_count,
+        categories_count=categories_count,
+        submissions_count=submissions_count,
+        prizes_count=prizes_count,
     )

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 export function PrizesAdminClient({ eventId }: { eventId: string }) {
   const { data: event } = useEvent(eventId);
@@ -105,7 +106,7 @@ export function PrizesAdminClient({ eventId }: { eventId: string }) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <TableSkeleton columns={4} />
           ) : sortedPrizes.length === 0 ? (
             <p className="text-muted-foreground">No prizes added yet.</p>
           ) : (

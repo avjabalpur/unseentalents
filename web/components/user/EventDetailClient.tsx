@@ -13,6 +13,7 @@ import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { EventStatusBadge } from "@/components/shared/EventStatusBadge";
 import { SubmissionCard } from "@/components/shared/SubmissionCard";
+import { SubmissionGridSkeleton } from "@/components/shared/SubmissionCardSkeleton";
 import { SubmissionUploadForm } from "@/components/user/SubmissionUploadForm";
 import { VoteButton } from "@/components/user/VoteButton";
 import { FadeIn } from "@/components/shared/FadeIn";
@@ -195,7 +196,7 @@ export function EventDetailClient({ event, stages, prizes }: { event: Event; sta
 
           {activeStage ? (
             leaderboardLoading ? (
-              <p className="text-muted-foreground">Loading entries…</p>
+              <SubmissionGridSkeleton />
             ) : leaderboard && leaderboard.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {leaderboard.map((submission, index) => (

@@ -3,6 +3,7 @@
 import DOMPurify from "isomorphic-dompurify";
 import { useTopic } from "@/lib/hooks/useTopics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function TermsDialog({
   open,
@@ -21,7 +22,11 @@ export function TermsDialog({
           {topic?.subtitle && <DialogDescription>{topic.subtitle}</DialogDescription>}
         </DialogHeader>
         {isLoading || !topic ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-3 w-full" />
+            ))}
+          </div>
         ) : (
           <div
             className="max-w-none text-sm text-white/90 [&_h2]:mb-2 [&_h2]:mt-4 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:first:mt-0 [&_p]:mb-3 [&_p]:leading-relaxed"

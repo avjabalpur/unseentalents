@@ -52,3 +52,11 @@ async def authenticate_user(db: AsyncSession, email: str, password: str) -> User
 
 def issue_tokens(user: User) -> tuple[str, str]:
     return create_access_token(user.id), create_refresh_token(user.id)
+
+
+async def change_password(db: AsyncSession, user: User, current_password: str, new_password: str) -> None:
+    if not verify_password(current_password, user.password_hash):
+        raise AppError("INVALID_CREDENTIALS", "Current password is incorrect.", status.HTTP_401_UNAUTHORIZED)
+    user.password_hash = hash_password(new_password)
+    db.add(user)
+    await db.commit()

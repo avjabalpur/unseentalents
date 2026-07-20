@@ -1,7 +1,9 @@
 import uuid
+from datetime import datetime
 
 from app.models.enums import EventStatus
 from app.schemas.base import CamelModel
+from app.schemas.stage import StageRead
 
 
 class EventCreate(CamelModel):
@@ -22,4 +24,9 @@ class EventRead(CamelModel):
     description: str | None
     event_type_id: uuid.UUID
     status: EventStatus
+    created_at: datetime
     computed_status: str | None = None
+    current_stage_name: str | None = None
+    first_stage_start_at: datetime | None = None
+    final_stage_end_at: datetime | None = None
+    stages: list[StageRead] = []

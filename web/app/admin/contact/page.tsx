@@ -4,6 +4,7 @@ import { useAdminContactMessages, useMarkContactMessageRead } from "@/lib/hooks/
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ListCardSkeleton } from "@/components/admin/CardGridSkeleton";
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -28,7 +29,7 @@ export default function AdminContactPage() {
       </p>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Loading…</p>
+        <ListCardSkeleton />
       ) : !messages || messages.length === 0 ? (
         <p className="text-muted-foreground">No messages yet.</p>
       ) : (

@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import type { CountItem } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const COLORS = ["#d91f26", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#64748b", "#14b8a6"];
 
@@ -28,6 +29,23 @@ const tooltipStyle = {
 
 function EmptyState() {
   return <p className="flex h-64 items-center justify-center text-sm text-muted-foreground">No data yet.</p>;
+}
+
+export function ChartCardSkeleton({ title }: { title: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex h-64 items-end gap-3 px-4">
+          {[60, 90, 45, 75, 55].map((h, i) => (
+            <Skeleton key={i} className="flex-1" style={{ height: `${h}%` }} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function BarChartCard({

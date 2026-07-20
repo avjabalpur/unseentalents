@@ -9,7 +9,7 @@ from app.core.errors import AppError
 from app.core.security import REFRESH_TOKEN_TYPE, create_access_token, create_refresh_token, decode_token
 from app.db import get_db
 from app.models.user import User
-from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
+from app.schemas.auth import ChangePasswordRequest, LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.user import UserRead
 from app.services import auth_service
 
@@ -81,3 +81,11 @@ async def logout(response: Response):
 @router.get("/me", response_model=UserRead)
 async def me(current_user: CurrentUser):
     return current_user
+
+
+@router.post("/change-password")
+async def change_password(
+    payload: ChangePasswordRequest, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
+    await auth_service.change_password(db, current_user, payload.current_password, payload.new_password)
+    return {"success": True}

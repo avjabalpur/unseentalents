@@ -13,3 +13,10 @@ class AdminStats(CamelModel):
     votes_by_event: list[CountItem]
     users_by_role: list[CountItem]
     events_by_status: list[CountItem]
+
+
+class PublicSummary(CamelModel):
+    events_count: int
+    categories_count: int
+    submissions_count: int
+    prizes_count: int

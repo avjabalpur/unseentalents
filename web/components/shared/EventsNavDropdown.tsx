@@ -16,6 +16,12 @@ export function EventsNavDropdown() {
       </button>
       {open && (
         <div className="absolute left-0 top-full w-64 rounded-md border border-white/10 bg-black py-2 shadow-xl">
+          <Link
+            href="/events"
+            className="block border-b border-white/10 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-primary hover:bg-white/5"
+          >
+            View all events
+          </Link>
           {events && events.length > 0 ? (
             events.map((event) => (
               <Link

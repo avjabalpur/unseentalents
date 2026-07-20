@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 export default function AdminCouponsPage() {
   const { data: coupons, isLoading } = useAdminCoupons();
@@ -81,7 +82,7 @@ export default function AdminCouponsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <TableSkeleton columns={4} />
           ) : (
             <Table>
               <TableHeader>

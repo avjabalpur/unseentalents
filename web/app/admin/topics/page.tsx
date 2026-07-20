@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 const EMPTY_FORM: TopicPayload = {
   key: "",
@@ -196,7 +197,7 @@ export default function AdminTopicsPage() {
             </Select>
           </div>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading…</p>
+            <TableSkeleton columns={5} />
           ) : filteredTopics.length === 0 ? (
             <p className="text-muted-foreground">No topics match your filters.</p>
           ) : (
