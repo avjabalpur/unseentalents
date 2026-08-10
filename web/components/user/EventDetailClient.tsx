@@ -115,7 +115,7 @@ export function EventDetailClient({ event, stages, prizes }: { event: Event; sta
             ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
             : {
                 backgroundImage:
-                  "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(217,31,38,0.3), transparent)",
+                  "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(var(--brand-rgb),0.3), transparent)",
               }
         }
       >

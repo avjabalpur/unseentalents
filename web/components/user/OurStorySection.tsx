@@ -15,7 +15,7 @@ export function OurStorySection() {
         className="animate-drift pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(217,31,38,0.16), transparent)",
+            "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(var(--brand-rgb),0.16), transparent)",
         }}
       />
       <div className="relative mx-auto max-w-4xl px-4 text-center">

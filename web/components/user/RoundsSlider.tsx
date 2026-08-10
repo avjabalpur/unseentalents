@@ -90,7 +90,7 @@ export function RoundsSlider() {
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 50% 40% at 15% 0%, rgba(217,31,38,0.25), transparent), radial-gradient(ellipse 40% 30% at 100% 100%, rgba(217,31,38,0.15), transparent)",
+            "radial-gradient(ellipse 50% 40% at 15% 0%, rgba(var(--brand-rgb),0.25), transparent), radial-gradient(ellipse 40% 30% at 100% 100%, rgba(var(--brand-rgb),0.15), transparent)",
         }}
       />
       <div className="relative mx-auto max-w-[1600px] px-4">
@@ -143,7 +143,7 @@ export function RoundsSlider() {
                     className={cn(
                       "group relative overflow-hidden rounded-lg border bg-black transition-all duration-500",
                       isActive
-                        ? "border-primary shadow-[0_0_30px_-5px_rgba(217,31,38,0.6)]"
+                        ? "border-primary shadow-[0_0_30px_-5px_rgba(var(--brand-rgb),0.6)]"
                         : "border-white/10 hover:border-white/30",
                     )}
                   >

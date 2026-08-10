@@ -16,7 +16,7 @@ export function BrandMark({ className }: { className?: string }) {
         className,
       )}
     >
-      S
+      SW
     </span>
   );
 }

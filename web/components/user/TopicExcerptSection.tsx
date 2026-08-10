@@ -31,7 +31,7 @@ export function TopicExcerptSection({ topicKey }: { topicKey: string }) {
         className="animate-drift pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 50% 60% at 50% 100%, rgba(217,31,38,0.1), transparent)",
+            "radial-gradient(ellipse 50% 60% at 50% 100%, rgba(var(--brand-rgb),0.1), transparent)",
         }}
       />
       <div className="relative mx-auto max-w-5xl px-4">

@@ -1,6 +1,7 @@
 import uuid
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -12,6 +13,7 @@ from app.models.user import User
 from app.schemas.credit import AdminGrantCreditRequest
 from app.schemas.user import UserRead, UserUpdate
 from app.services.credit_service import grant_credit
+from app.storage.local import get_storage_backend
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -27,11 +29,31 @@ async def list_users(
 
 @router.patch("/me", response_model=UserRead)
 async def update_me(payload: UserUpdate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
-    if payload.name is not None:
-        current_user.name = payload.name
-        db.add(current_user)
-        await db.commit()
-        await db.refresh(current_user)
+    updates = payload.model_dump(exclude_unset=True, by_alias=False)
+    if not updates:
+        return current_user
+    for field, value in updates.items():
+        setattr(current_user, field, value)
+    db.add(current_user)
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
+
+
+@router.post("/me/avatar", response_model=UserRead)
+async def upload_my_avatar(
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+    file: UploadFile = File(...),
+):
+    storage = get_storage_backend()
+    extension = Path(file.filename or "").suffix.lower() or ".jpg"
+    key = f"avatars/{current_user.id}{extension}"
+    await storage.save(file, key)
+    current_user.avatar_key = key
+    db.add(current_user)
+    await db.commit()
+    await db.refresh(current_user)
     return current_user
 
 

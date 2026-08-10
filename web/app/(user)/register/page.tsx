@@ -64,7 +64,7 @@ export default function RegisterPage() {
       className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-16"
       style={{
         backgroundImage:
-          "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(217,31,38,0.18), transparent), radial-gradient(ellipse 50% 40% at 100% 100%, rgba(217,31,38,0.12), transparent)",
+          "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(var(--brand-rgb),0.18), transparent), radial-gradient(ellipse 50% 40% at 100% 100%, rgba(var(--brand-rgb),0.12), transparent)",
       }}
     >
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card/70 p-8 shadow-2xl backdrop-blur sm:p-10">

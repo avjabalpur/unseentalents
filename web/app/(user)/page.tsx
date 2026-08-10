@@ -53,7 +53,7 @@ export default async function HomePage() {
           className="relative overflow-hidden border-b border-white/10 bg-black"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(217,31,38,0.35), transparent), radial-gradient(ellipse 60% 50% at 85% 15%, rgba(217,31,38,0.15), transparent)",
+              "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(var(--brand-rgb),0.35), transparent), radial-gradient(ellipse 60% 50% at 85% 15%, rgba(var(--brand-rgb),0.15), transparent)",
           }}
         >
           <div className="mx-auto max-w-[1600px] px-4 py-24 text-center">

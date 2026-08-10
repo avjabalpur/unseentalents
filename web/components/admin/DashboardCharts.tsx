@@ -17,7 +17,7 @@ import type { CountItem } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const COLORS = ["#d91f26", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#64748b", "#14b8a6"];
+const COLORS = ["var(--brand)", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#64748b", "#14b8a6", "#f59e0b"];
 
 const tooltipStyle = {
   backgroundColor: "var(--popover)",
@@ -51,7 +51,7 @@ export function ChartCardSkeleton({ title }: { title: string }) {
 export function BarChartCard({
   title,
   data,
-  barColor = "#d91f26",
+  barColor = "var(--brand)",
 }: {
   title: string;
   data: CountItem[];

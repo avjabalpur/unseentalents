@@ -36,6 +36,10 @@ export interface User {
   status: UserStatus;
   creditBalance: number;
   createdAt: string;
+  avatarKey: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  twitterUrl: string | null;
 }
 
 export interface EventType {
