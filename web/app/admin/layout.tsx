@@ -1,42 +1,79 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  Bell,
   CalendarRange,
+  ChevronDown,
   ExternalLink,
   FileText,
   GalleryHorizontal,
   LayoutDashboard,
+  LogOut,
   Mail,
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  Settings,
   ShieldCheck,
+  Sun,
   Tags,
   Ticket,
   Users as UsersIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { usePendingSubmissions, useAdminContactMessages } from "@/lib/hooks/useAdmin";
+import { Brand, BrandMark } from "@/components/shared/Brand";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Collapsible, CollapsibleTrigger, CollapsiblePanel } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+const NAV_LINKS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/event-types", label: "Event Types", icon: Tags },
   { href: "/admin/events", label: "Events", icon: CalendarRange },
   { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck },
+  { href: "/admin/users", label: "Users", icon: UsersIcon },
+];
+
+const CONFIG_LINKS = [
   { href: "/admin/topics", label: "Topics", icon: FileText },
   { href: "/admin/slides", label: "Hero Slider", icon: GalleryHorizontal },
   { href: "/admin/coupons", label: "Coupons", icon: Ticket },
-  { href: "/admin/users", label: "Users", icon: UsersIcon },
   { href: "/admin/contact", label: "Contact Messages", icon: Mail },
 ];
+
+const ALL_NAV_ITEMS = [...NAV_LINKS, ...CONFIG_LINKS];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: pendingSubmissions } = usePendingSubmissions();
+  const { data: contactMessages } = useAdminContactMessages();
+  const pendingCount = pendingSubmissions?.length ?? 0;
+  const unreadContactCount = contactMessages?.filter((m) => !m.isRead).length ?? 0;
+  const notificationCount = pendingCount + unreadContactCount;
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "ADMIN")) {
@@ -44,10 +81,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [isLoading, user, router, pathname]);
 
+  useEffect(() => {
+    const stored = localStorage.getItem("admin-theme");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage after mount
+    if (stored === "light" || stored === "dark") setTheme(stored);
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- auto-expand the group containing the active route
+    if (CONFIG_LINKS.some((l) => pathname === l.href)) setConfigOpen(true);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === "Escape") {
+        setSearchOpen(false);
+        searchInputRef.current?.blur();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("admin-theme", next);
+      return next;
+    });
+  };
+
+  const query = search.trim().toLowerCase();
+  const searchResults = query ? ALL_NAV_ITEMS.filter((item) => item.label.toLowerCase().includes(query)) : [];
+
+  const goToResult = (href: string) => {
+    setSearch("");
+    setSearchOpen(false);
+    router.push(href);
+  };
+
+  const themeClass = theme === "light" ? "admin-light" : "admin-dark";
+
   if (isLoading || !user || user.role !== "ADMIN") {
     return (
-      <div className="flex min-h-screen">
-        <aside className="flex h-screen w-64 shrink-0 flex-col gap-2 border-r border-white/10 bg-black p-4">
+      <div className={cn("flex min-h-screen bg-background", themeClass)}>
+        <aside className="flex h-screen w-64 shrink-0 flex-col gap-2 border-r border-sidebar-border bg-sidebar p-4">
           <Skeleton className="mb-4 h-9 w-32" />
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-full rounded-lg" />
@@ -67,68 +149,214 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-white/10 bg-black">
-        <Link href="/" className="flex items-center border-b border-white/10 px-5 py-5">
-          <Image src="/unseentalents-logo.jpg" alt="Unseen Talents" width={150} height={50} className="h-9 w-auto" />
+    <div className={cn("flex min-h-screen bg-background text-foreground", themeClass)}>
+      <aside
+        className={cn(
+          "sticky top-0 flex h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200",
+          sidebarCollapsed ? "w-[76px]" : "w-64",
+        )}
+      >
+        <Link href="/" className="flex h-[65px] shrink-0 items-center justify-center border-b border-sidebar-border px-5">
+          {sidebarCollapsed ? <BrandMark /> : <Brand className="text-xl" />}
         </Link>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {NAV.map((item) => {
+          {NAV_LINKS.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                title={sidebarCollapsed ? item.label : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm uppercase tracking-wide transition-colors",
+                  "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
                   isActive
-                    ? "border-primary bg-primary/10 font-medium text-white"
-                    : "text-muted-foreground hover:bg-white/5 hover:text-white",
+                    ? "border-primary bg-gradient-to-r from-primary/15 to-transparent font-medium text-foreground shadow-sm shadow-primary/10"
+                    : "text-muted-foreground hover:translate-x-0.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 )}
               >
                 <Icon className={cn("size-4.5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-                {item.label}
+                <span className={cn(sidebarCollapsed && "hidden")}>{item.label}</span>
               </Link>
             );
           })}
-        </nav>
 
-        <div className="space-y-3 border-t border-white/10 p-4">
-          <div className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2.5">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-semibold text-primary">
-              {user.name?.[0]?.toUpperCase() ?? "A"}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-white">{user.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => logout().then(() => router.push("/"))}
-          >
-            Log out
-          </Button>
-        </div>
+          <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
+            <CollapsibleTrigger
+              render={
+                <button
+                  type="button"
+                  title={sidebarCollapsed ? "Configuration" : undefined}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
+                    CONFIG_LINKS.some((l) => pathname === l.href)
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  )}
+                >
+                  <Settings className="size-4.5 shrink-0 text-muted-foreground" />
+                  <span className={cn("flex-1 text-left", sidebarCollapsed && "hidden")}>Configuration</span>
+                  <ChevronDown
+                    className={cn(
+                      "size-4 shrink-0 text-muted-foreground transition-transform",
+                      configOpen && "rotate-180",
+                      sidebarCollapsed && "hidden",
+                    )}
+                  />
+                </button>
+              }
+            />
+            <CollapsiblePanel>
+              <div className={cn("space-y-1 pt-1", !sidebarCollapsed && "pl-5")}>
+                {CONFIG_LINKS.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={sidebarCollapsed ? item.label : undefined}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm tracking-wide uppercase transition-all",
+                        isActive
+                          ? "border-primary bg-gradient-to-r from-primary/15 to-transparent font-medium text-foreground"
+                          : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      )}
+                    >
+                      <Icon className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                      <span className={cn(sidebarCollapsed && "hidden")}>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </CollapsiblePanel>
+          </Collapsible>
+        </nav>
       </aside>
 
       <div className="flex-1">
-        <header className="flex items-center justify-end border-b border-white/10 bg-black/40 px-8 py-3">
+        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/80 px-6 py-3 backdrop-blur-sm">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen className="size-4.5" /> : <PanelLeftClose className="size-4.5" />}
+          </Button>
+
+          <div className="relative w-full max-w-sm">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              ref={searchInputRef}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => setTimeout(() => setSearchOpen(false), 120)}
+              placeholder="Search or type command..."
+              className="h-9 w-full rounded-lg border border-input bg-muted/40 pr-14 pl-9 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/20"
+            />
+            <kbd className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              ⌘K
+            </kbd>
+
+            {searchOpen && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 z-20 mt-1.5 w-full overflow-hidden rounded-lg border border-border bg-popover py-1 shadow-lg">
+                {searchResults.map((item) => (
+                  <button
+                    key={item.href}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => goToResult(item.href)}
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-popover-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <item.icon className="size-4 text-muted-foreground" />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1" />
+
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
+            className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-primary lg:inline-flex"
           >
             View live site
             <ExternalLink className="size-3.5" />
           </a>
+
+          <Button variant="ghost" size="icon-sm" onClick={toggleTheme} aria-label="Toggle theme">
+            {theme === "dark" ? <Moon className="size-4.5" /> : <Sun className="size-4.5" />}
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" className="relative" aria-label="Notifications">
+                  <Bell className="size-4.5" />
+                  {notificationCount > 0 && <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-primary" />}
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {notificationCount === 0 ? (
+                <p className="px-1.5 py-2 text-sm text-muted-foreground">You&apos;re all caught up.</p>
+              ) : (
+                <>
+                  {pendingCount > 0 && (
+                    <DropdownMenuItem render={<Link href="/admin/moderation" />}>
+                      {pendingCount} submission{pendingCount === 1 ? "" : "s"} awaiting moderation
+                    </DropdownMenuItem>
+                  )}
+                  {unreadContactCount > 0 && (
+                    <DropdownMenuItem render={<Link href="/admin/contact" />}>
+                      {unreadContactCount} unread contact message{unreadContactCount === 1 ? "" : "s"}
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button className="flex items-center gap-2 rounded-full py-1 pr-2 pl-1 transition-colors hover:bg-accent">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-semibold text-primary ring-2 ring-primary/20">
+                    {user.name?.[0]?.toUpperCase() ?? "A"}
+                  </span>
+                  <span className="hidden max-w-28 truncate text-sm font-medium text-foreground sm:inline">
+                    {user.name}
+                  </span>
+                  <ChevronDown className="hidden size-3.5 shrink-0 text-muted-foreground sm:inline" />
+                </button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="truncate font-normal text-muted-foreground">{user.email}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={() => logout().then(() => router.push("/"))}>
+                <LogOut className="size-4" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
-        <main className="p-8">{children}</main>
+        <main className="relative p-8">
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_rgba(217,31,38,0.06),_transparent_55%)]" />
+          {children}
+        </main>
       </div>
     </div>
   );

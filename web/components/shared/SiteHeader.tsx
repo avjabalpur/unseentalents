@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, KeyRound, ShieldCheck, ThumbsUp, User as UserIcon, Video, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
+import { Brand } from "@/components/shared/Brand";
 import { CreditBalanceBadge } from "@/components/shared/CreditBalanceBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventsNavDropdown } from "@/components/shared/EventsNavDropdown";
@@ -28,14 +28,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-white/10 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/60">
       <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-4">
         <Link href="/" className="flex items-center">
-          <Image
-            src="/unseentalents-logo.jpg"
-            alt="Unseen Talents"
-            width={150}
-            height={50}
-            priority
-            className="h-10 w-auto"
-          />
+          <Brand />
         </Link>
 
         <nav className="hidden items-center md:flex">

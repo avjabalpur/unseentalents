@@ -20,10 +20,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 const COLORS = ["#d91f26", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#64748b", "#14b8a6"];
 
 const tooltipStyle = {
-  backgroundColor: "#2f2f2f",
-  border: "1px solid rgba(255,255,255,0.12)",
+  backgroundColor: "var(--popover)",
+  border: "1px solid var(--border)",
   borderRadius: 8,
-  color: "#fff",
+  color: "var(--popover-foreground)",
   fontSize: 13,
 };
 
@@ -68,17 +68,17 @@ export function BarChartCard({
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                 interval={0}
                 angle={-20}
                 textAnchor="end"
                 height={50}
               />
-              <YAxis allowDecimals={false} tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }} />
-              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
+              <YAxis allowDecimals={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--accent)", opacity: 0.4 }} />
               <Bar dataKey="count" fill={barColor} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -114,8 +114,8 @@ export function PieChartCard({ title, data }: { title: string; data: CountItem[]
               </Pie>
               <Tooltip contentStyle={tooltipStyle} />
               <Legend
-                wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}
-                formatter={(value) => <span style={{ color: "rgba(255,255,255,0.7)" }}>{value}</span>}
+                wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)" }}
+                formatter={(value) => <span style={{ color: "var(--muted-foreground)" }}>{value}</span>}
               />
             </PieChart>
           </ResponsiveContainer>

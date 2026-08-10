@@ -30,7 +30,7 @@ function ToolbarButton({
       title={label}
       onClick={onClick}
       className={cn(
-        "rounded p-1.5 text-white/70 hover:bg-white/10 hover:text-white",
+        "rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground",
         active && "bg-primary/20 text-primary",
       )}
     >
@@ -51,7 +51,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     editorProps: {
       attributes: {
         class:
-          "min-h-40 max-w-none rounded-b-md border border-t-0 border-input bg-background px-3 py-2 text-sm text-white focus:outline-none [&_a]:text-primary [&_a]:underline [&_h2]:mb-2 [&_h2]:mt-4 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mb-1 [&_h3]:mt-3 [&_h3]:text-lg [&_h3]:font-semibold [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_img]:my-3 [&_img]:rounded-lg [&_blockquote]:border-l-2 [&_blockquote]:border-primary [&_blockquote]:pl-3 [&_blockquote]:italic",
+          "min-h-40 max-w-none rounded-b-md border border-t-0 border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none [&_a]:text-primary [&_a]:underline [&_h2]:mb-2 [&_h2]:mt-4 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mb-1 [&_h3]:mt-3 [&_h3]:text-lg [&_h3]:font-semibold [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_img]:my-3 [&_img]:rounded-lg [&_blockquote]:border-l-2 [&_blockquote]:border-primary [&_blockquote]:pl-3 [&_blockquote]:italic",
       },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -125,7 +125,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
         <ToolbarButton label="Image" onClick={addImage}>
           <ImageIcon className="size-4" />
         </ToolbarButton>
-        <div className="mx-1 h-5 w-px bg-white/10" />
+        <div className="mx-1 h-5 w-px bg-border" />
         <ToolbarButton label="Undo" onClick={() => editor.chain().focus().undo().run()}>
           <Undo className="size-4" />
         </ToolbarButton>

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
 
 export default function AdminSlidesPage() {
   const { data: slides, isLoading } = useAdminSlides();
@@ -52,11 +53,7 @@ export default function AdminSlidesPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Hero Slider</h1>
-      <p className="-mt-4 text-sm text-muted-foreground">
-        Configure the homepage image slider. Provide separate images for desktop and mobile so each
-        crops correctly; mobile falls back to the desktop image if omitted.
-      </p>
+      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Hero Slider" }]} />
 
       <CollapsibleFormCard title="Add slide" triggerLabel="Add slide" open={formOpen} onOpenChange={setFormOpen}>
         <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
@@ -90,7 +87,7 @@ export default function AdminSlidesPage() {
         </form>
       </CollapsibleFormCard>
 
-      <Card>
+      <Card className="shadow-md shadow-black/20">
         <CardHeader>
           <CardTitle>All slides</CardTitle>
         </CardHeader>

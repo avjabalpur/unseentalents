@@ -9,6 +9,7 @@ import { ApiError } from "@/lib/api-client";
 import { formatDate } from "@/lib/format";
 import type { AdvanceMode, StageName } from "@/types/api";
 import { EventStatusBadge } from "@/components/shared/EventStatusBadge";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,15 +79,22 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Stages</h1>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/admin" },
+            { label: "Events", href: "/admin/events" },
+            { label: event?.name ?? "Event" },
+            { label: "Stages" },
+          ]}
+        />
         {event ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <p className="text-lg font-medium text-white">{event.name}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-lg font-medium text-foreground">{event.name}</p>
             {event.computedStatus && <EventStatusBadge status={event.computedStatus} />}
             {eventType && <Badge variant="secondary">{eventType.name}</Badge>}
           </div>
         ) : (
-          <div className="mt-3 h-6 w-48 animate-pulse rounded bg-white/5" />
+          <div className="h-6 w-48 animate-pulse rounded bg-accent" />
         )}
         {event?.description && <p className="mt-1 text-sm text-muted-foreground">{event.description}</p>}
       </div>
@@ -149,7 +157,7 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
         </form>
       </CollapsibleFormCard>
 
-      <Card>
+      <Card className="shadow-md shadow-black/20">
         <CardHeader>
           <CardTitle>Stage pipeline</CardTitle>
         </CardHeader>
@@ -231,7 +239,7 @@ function StageResultsPanel({ stageId }: { stageId: string }) {
   };
 
   return (
-    <Card>
+    <Card className="shadow-md shadow-black/20">
       <CardHeader>
         <CardTitle>Results</CardTitle>
       </CardHeader>

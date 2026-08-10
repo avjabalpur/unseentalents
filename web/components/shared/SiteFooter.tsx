@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { AtSign, Camera, PlayCircle, ThumbsUp } from "lucide-react";
+import { Brand } from "@/components/shared/Brand";
 
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
@@ -33,13 +33,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[1600px] px-4 py-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Image
-              src="/unseentalents-logo.jpg"
-              alt="Unseen Talents"
-              width={150}
-              height={50}
-              className="h-10 w-auto"
-            />
+            <Brand />
             <p className="mt-4 max-w-xs text-sm text-white/60">
               A stage for talented people everywhere — upload your performance, rally your
               supporters, and vote your way to the top.

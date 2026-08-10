@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
+import { CheckCircle2 } from "lucide-react";
 import { usePendingSubmissions, useModerateSubmission } from "@/lib/hooks/useAdmin";
 import { ApiError, mediaUrl } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MediaPlayer } from "@/components/shared/MediaPlayer";
 import { CardGridSkeleton } from "@/components/admin/CardGridSkeleton";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
+import { EmptyState } from "@/components/admin/EmptyState";
 
 export default function AdminModerationPage() {
   const { data: submissions, isLoading } = usePendingSubmissions();
@@ -15,12 +18,16 @@ export default function AdminModerationPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">Moderation queue</h1>
+      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Moderation" }]} />
 
       {isLoading ? (
         <CardGridSkeleton />
       ) : !submissions || submissions.length === 0 ? (
-        <p className="text-muted-foreground">Nothing pending — you&apos;re all caught up.</p>
+        <EmptyState
+          icon={CheckCircle2}
+          title="All caught up"
+          description="Nothing pending — new submissions will show up here."
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {submissions.map((submission) => {
@@ -28,7 +35,7 @@ export default function AdminModerationPage() {
             const videoUrl = submission.mediaType === "VIDEO" ? mediaUrl(submission.storageKey) : null;
             const imageUrl = submission.mediaType === "IMAGE" ? mediaUrl(submission.storageKey) : null;
             return (
-              <Card key={submission.id} className="overflow-hidden py-0 gap-0">
+              <Card key={submission.id} className="gap-0 overflow-hidden py-0 shadow-md shadow-black/20">
                 <div className="aspect-video bg-black">
                   <MediaPlayer
                     mediaType={submission.mediaType}

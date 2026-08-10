@@ -1,10 +1,14 @@
 "use client";
 
 import { useAdminContactMessages, useMarkContactMessageRead } from "@/lib/hooks/useAdmin";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListCardSkeleton } from "@/components/admin/CardGridSkeleton";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
+import { EmptyState } from "@/components/admin/EmptyState";
+import { Mail as MailIcon } from "lucide-react";
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -22,20 +26,23 @@ export default function AdminContactPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-semibold">Contact Messages</h1>
-      <p className="mb-6 text-sm text-muted-foreground">
-        Submissions from the public Contact Us form. Reply directly to the sender&apos;s email —
-        outbound email isn&apos;t wired up yet.
-      </p>
+      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Contact Messages" }]} />
 
       {isLoading ? (
         <ListCardSkeleton />
       ) : !messages || messages.length === 0 ? (
-        <p className="text-muted-foreground">No messages yet.</p>
+        <EmptyState
+          icon={MailIcon}
+          title="No messages yet"
+          description="Submissions from the Contact Us form will appear here."
+        />
       ) : (
         <div className="space-y-4">
           {messages.map((message) => (
-            <Card key={message.id} className={message.isRead ? "opacity-70" : ""}>
+            <Card
+              key={message.id}
+              className={cn("shadow-md shadow-black/20", message.isRead ? "opacity-70" : "")}
+            >
               <CardHeader>
                 <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
                   <span>{message.subject}</span>
@@ -46,7 +53,7 @@ export default function AdminContactPage() {
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="whitespace-pre-wrap text-sm text-white/90">{message.message}</p>
+                <p className="whitespace-pre-wrap text-sm text-foreground/90">{message.message}</p>
                 {!message.isRead && (
                   <Button size="sm" variant="outline" onClick={() => markRead.mutate(message.id)}>
                     Mark as read

@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Secret Whiz Web
 
-## Getting Started
+Next.js 16 (App Router) frontend for Secret Whiz, using React 19, Tailwind CSS 4, and TanStack Query.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 20+ and npm
+- The [API](../api/README.md) running locally (this app talks to it over HTTP)
+
+## Setup
+
+1. **Configure environment variables**
+
+   Create/check `.env.local` in this directory:
+
+   ```bash
+   NEXT_PUBLIC_API_URL=http://localhost:8000
+   ```
+
+   Point this at wherever the API is running.
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Run the dev server**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3333](http://localhost:3333) — the dev server runs on port `3333` (see the `dev` script in `package.json`), not the Next.js default `3000`, since the API's `CORS_ORIGINS` is configured to allow that origin.
+
+## Other scripts
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build   # production build
+npm run start   # serve the production build (also on port 3333)
+npm run lint    # run ESLint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project layout
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+web/
+├── app/
+│   ├── (user)/     # Public/user-facing routes
+│   ├── admin/      # Admin routes
+│   ├── layout.tsx  # Root layout
+│   └── globals.css
+├── components/     # Shared UI components
+├── lib/            # API client, utilities, hooks
+└── types/          # Shared TypeScript types
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Notes
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- This project pins specific versions of Next.js/React that may include breaking changes relative to older docs/training data — see `AGENTS.md` for details before making framework-level changes.
+- Make sure PostgreSQL, Redis, and the API are all running first (see the [API README](../api/README.md)); otherwise requests from this app will fail.

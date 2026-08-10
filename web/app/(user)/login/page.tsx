@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -12,6 +11,7 @@ import { ApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Brand } from "@/components/shared/Brand";
 
 const schema = z.object({
   email: z.string().email(),
@@ -45,7 +45,7 @@ function LoginForm() {
   return (
     <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card/70 p-8 shadow-2xl backdrop-blur sm:p-10">
       <Link href="/" className="mb-8 flex justify-center">
-        <Image src="/unseentalents-logo.jpg" alt="Unseen Talents" width={150} height={50} className="h-10 w-auto" />
+        <Brand className="text-3xl" />
       </Link>
 
       <p className="mb-2 text-center text-sm font-semibold uppercase tracking-[0.3em] text-primary">Welcome back</p>

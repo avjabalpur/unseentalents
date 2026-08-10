@@ -2,12 +2,14 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Trash2, Trophy } from "lucide-react";
+import { Gift, Trash2, Trophy } from "lucide-react";
 import { useEvent, useEventPrizes } from "@/lib/hooks/useEvents";
 import { useEventTypes } from "@/lib/hooks/useEventTypes";
 import { useCreatePrize, useDeletePrize } from "@/lib/hooks/useAdmin";
 import { ApiError } from "@/lib/api-client";
 import { EventStatusBadge } from "@/components/shared/EventStatusBadge";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
+import { EmptyState } from "@/components/admin/EmptyState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,15 +54,22 @@ export function PrizesAdminClient({ eventId }: { eventId: string }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Prizes &amp; Awards</h1>
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/admin" },
+            { label: "Events", href: "/admin/events" },
+            { label: event?.name ?? "Event" },
+            { label: "Prizes & Awards" },
+          ]}
+        />
         {event ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <p className="text-lg font-medium text-white">{event.name}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-lg font-medium text-foreground">{event.name}</p>
             {event.computedStatus && <EventStatusBadge status={event.computedStatus} />}
             {eventType && <Badge variant="secondary">{eventType.name}</Badge>}
           </div>
         ) : (
-          <div className="mt-3 h-6 w-48 animate-pulse rounded bg-white/5" />
+          <div className="h-6 w-48 animate-pulse rounded bg-accent" />
         )}
         {event?.description && <p className="mt-1 text-sm text-muted-foreground">{event.description}</p>}
       </div>
@@ -100,7 +109,7 @@ export function PrizesAdminClient({ eventId }: { eventId: string }) {
         </form>
       </CollapsibleFormCard>
 
-      <Card>
+      <Card className="shadow-md shadow-black/20">
         <CardHeader>
           <CardTitle>Prizes for this event</CardTitle>
         </CardHeader>
@@ -108,7 +117,7 @@ export function PrizesAdminClient({ eventId }: { eventId: string }) {
           {isLoading ? (
             <TableSkeleton columns={4} />
           ) : sortedPrizes.length === 0 ? (
-            <p className="text-muted-foreground">No prizes added yet.</p>
+            <EmptyState icon={Gift} title="No prizes added yet" description="Add a prize above to get started." />
           ) : (
             <Table>
               <TableHeader>

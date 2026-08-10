@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
 
 export default function AdminCouponsPage() {
   const { data: coupons, isLoading } = useAdminCoupons();
@@ -39,7 +40,7 @@ export default function AdminCouponsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Coupons</h1>
+      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Coupons" }]} />
 
       <CollapsibleFormCard
         title="Create coupon"
@@ -76,7 +77,7 @@ export default function AdminCouponsPage() {
         </form>
       </CollapsibleFormCard>
 
-      <Card>
+      <Card className="shadow-md shadow-black/20">
         <CardHeader>
           <CardTitle>All coupons</CardTitle>
         </CardHeader>

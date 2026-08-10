@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
 
 export default function AdminEventsPage() {
   const { data: events, isLoading } = useAdminEvents();
@@ -49,7 +50,7 @@ export default function AdminEventsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Events</h1>
+      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Events" }]} />
 
       <CollapsibleFormCard title="Create event" triggerLabel="Add event" open={formOpen} onOpenChange={setFormOpen}>
         <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
@@ -82,7 +83,7 @@ export default function AdminEventsPage() {
         </form>
       </CollapsibleFormCard>
 
-      <Card>
+      <Card className="shadow-md shadow-black/20">
         <CardHeader>
           <CardTitle>All events</CardTitle>
         </CardHeader>
@@ -112,7 +113,7 @@ export default function AdminEventsPage() {
                     <TableCell>
                       <Link
                         href={`/admin/events/${event.id}/stages`}
-                        className="text-sm font-medium underline underline-offset-4"
+                        className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-primary transition-colors hover:bg-accent"
                       >
                         Configure stages
                       </Link>
@@ -120,7 +121,7 @@ export default function AdminEventsPage() {
                     <TableCell>
                       <Link
                         href={`/admin/events/${event.id}/prizes`}
-                        className="text-sm font-medium underline underline-offset-4"
+                        className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-primary transition-colors hover:bg-accent"
                       >
                         Configure prizes
                       </Link>

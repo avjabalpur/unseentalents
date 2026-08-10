@@ -15,6 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
+import { EmptyState } from "@/components/admin/EmptyState";
+import { SearchX } from "lucide-react";
 
 const EMPTY_FORM: TopicPayload = {
   key: "",
@@ -92,11 +95,7 @@ export default function AdminTopicsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Topics (CMS pages)</h1>
-      <p className="-mt-4 text-sm text-muted-foreground">
-        Publish content pages like &quot;What&apos;s New&quot; or &quot;About Us&quot;. Each is available at
-        /pages/[key]. Mark a topic &quot;featured&quot; to show it as a teaser block on the home page.
-      </p>
+      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Topics" }]} />
 
       <CollapsibleFormCard
         title={editingId ? "Edit topic" : "Create topic"}
@@ -173,7 +172,7 @@ export default function AdminTopicsPage() {
         </div>
       </CollapsibleFormCard>
 
-      <Card>
+      <Card className="shadow-md shadow-black/20">
         <CardHeader>
           <CardTitle>All topics</CardTitle>
         </CardHeader>
@@ -199,7 +198,7 @@ export default function AdminTopicsPage() {
           {isLoading ? (
             <TableSkeleton columns={5} />
           ) : filteredTopics.length === 0 ? (
-            <p className="text-muted-foreground">No topics match your filters.</p>
+            <EmptyState icon={SearchX} title="No topics found" description="Try adjusting your search or status filter." />
           ) : (
             <Table>
               <TableHeader>

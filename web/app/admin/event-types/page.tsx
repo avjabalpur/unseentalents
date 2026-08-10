@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
 
 export default function AdminEventTypesPage() {
   const { data: eventTypes, isLoading } = useEventTypes();
@@ -54,7 +55,7 @@ export default function AdminEventTypesPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Event Types</h1>
+      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Event Types" }]} />
 
       <CollapsibleFormCard
         title="Create event type"
@@ -89,7 +90,7 @@ export default function AdminEventTypesPage() {
         </form>
       </CollapsibleFormCard>
 
-      <Card>
+      <Card className="shadow-md shadow-black/20">
         <CardHeader>
           <CardTitle>All event types</CardTitle>
         </CardHeader>

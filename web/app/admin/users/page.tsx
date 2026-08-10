@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
+import { EmptyState } from "@/components/admin/EmptyState";
+import { UserSearch } from "lucide-react";
 
 export default function AdminUsersPage() {
   const { data: users, isLoading } = useAdminUsers();
@@ -31,8 +34,8 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">Users</h1>
-      <Card>
+      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Users" }]} />
+      <Card className="shadow-md shadow-black/20">
         <CardHeader>
           <CardTitle>All users</CardTitle>
         </CardHeader>
@@ -59,7 +62,7 @@ export default function AdminUsersPage() {
           {isLoading ? (
             <TableSkeleton columns={5} />
           ) : filteredUsers.length === 0 ? (
-            <p className="text-muted-foreground">No users match your filters.</p>
+            <EmptyState icon={UserSearch} title="No users found" description="Try adjusting your search or role filter." />
           ) : (
             <Table>
               <TableHeader>

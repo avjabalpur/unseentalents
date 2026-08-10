@@ -26,7 +26,7 @@ export function CollapsibleFormCard({
   const setOpen = onOpenChange ?? setInternalOpen;
 
   return (
-    <Card>
+    <Card className="shadow-md shadow-black/20">
       <Collapsible open={open} onOpenChange={setOpen}>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
