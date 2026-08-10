@@ -7,6 +7,7 @@ from app.core.errors import AppError
 from app.models.credit_transaction import CreditTransaction
 from app.models.enums import CreditTransactionType
 from app.models.user import User
+from app.services import activity_log_service
 
 
 async def grant_credit(
@@ -15,6 +16,7 @@ async def grant_credit(
     amount: int,
     transaction_type: CreditTransactionType,
     reference_id: uuid.UUID | None = None,
+    actor_id: uuid.UUID | None = None,
 ) -> CreditTransaction:
     user.credit_balance += amount
     db.add(user)
@@ -27,6 +29,10 @@ async def grant_credit(
     )
     db.add(transaction)
     await db.flush()
+    if transaction_type == CreditTransactionType.ADMIN_GRANT:
+        activity_log_service.record(
+            db, "USER", user.id, "CREDIT_GRANTED", actor_id=actor_id, metadata={"amount": amount}
+        )
     return transaction
 
 

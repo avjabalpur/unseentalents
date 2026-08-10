@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { CalendarRange, ShieldAlert, Tags } from "lucide-react";
 import { useAdminEvents, useAdminStats } from "@/lib/hooks/useAdmin";
 import { usePendingSubmissions } from "@/lib/hooks/useAdmin";
 import { useEventTypes } from "@/lib/hooks/useEventTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
 import { BarChartCard, ChartCardSkeleton, PieChartCard } from "@/components/admin/DashboardCharts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +19,12 @@ export default function AdminDashboardPage() {
   const { data: events, isLoading: eventsLoading } = useAdminEvents();
   const { data: pending, isLoading: pendingLoading } = usePendingSubmissions();
   const { data: eventTypes, isLoading: eventTypesLoading } = useEventTypes();
-  const { data: stats, isLoading: statsLoading } = useAdminStats();
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const { data: stats, isLoading: statsLoading } = useAdminStats({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
 
   const statCardsLoading = eventsLoading || pendingLoading || eventTypesLoading;
 
@@ -69,10 +78,34 @@ export default function AdminDashboardPage() {
             ))}
       </div>
 
-      <h2 className="mt-10 mb-4 flex items-center gap-2 text-lg font-semibold tracking-wide uppercase">
-        <span className="h-4 w-1 rounded-full bg-primary" />
-        Platform activity
-      </h2>
+      <div className="mt-10 mb-4 flex flex-wrap items-center justify-between gap-4">
+        <h2 className="flex items-center gap-2 text-lg font-semibold tracking-wide uppercase">
+          <span className="h-4 w-1 rounded-full bg-primary" />
+          Platform activity
+        </h2>
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">From</Label>
+            <Input type="date" className="h-8 w-36" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">To</Label>
+            <Input type="date" className="h-8 w-36" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          {(dateFrom || dateTo) && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setDateFrom("");
+                setDateTo("");
+              }}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {statsLoading ? (
           <>

@@ -11,6 +11,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError, app_error_handler, validation_error_handler
 from app.jobs.scheduler import start_scheduler, stop_scheduler
 from app.routers import (
+    activity,
     auth,
     comments,
     contact,
@@ -18,7 +19,10 @@ from app.routers import (
     credits,
     event_types,
     events,
+    export,
     prizes,
+    reports,
+    settings as settings_router,
     slides,
     stages,
     stats,
@@ -78,6 +82,10 @@ for router in (
     contact.router,
     comments.router,
     stats.router,
+    activity.router,
+    reports.router,
+    settings_router.router,
+    export.router,
 ):
     app.include_router(router, prefix=settings.api_prefix)
 

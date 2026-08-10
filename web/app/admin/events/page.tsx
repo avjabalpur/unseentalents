@@ -3,9 +3,11 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useAdminEvents, useCreateEvent, usePublishEvent } from "@/lib/hooks/useAdmin";
+import { Copy, Trash2 } from "lucide-react";
+import { useAdminEvents, useArchiveEvent, useCreateEvent, useDeleteEvent, usePublishEvent } from "@/lib/hooks/useAdmin";
 import { useEventTypes } from "@/lib/hooks/useEventTypes";
 import { ApiError } from "@/lib/api-client";
+import type { Event } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,11 +24,20 @@ export default function AdminEventsPage() {
   const { data: eventTypes } = useEventTypes();
   const createEvent = useCreateEvent();
   const publishEvent = usePublishEvent();
+  const archiveEvent = useArchiveEvent();
+  const deleteEvent = useDeleteEvent();
 
   const [formOpen, setFormOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [eventTypeId, setEventTypeId] = useState<string>("");
+
+  const handleDuplicate = (event: Event) => {
+    setName(`Copy of ${event.name}`);
+    setDescription(event.description ?? "");
+    setEventTypeId(event.eventTypeId);
+    setFormOpen(true);
+  };
 
   const handleCreate = (e: FormEvent) => {
     e.preventDefault();
@@ -89,7 +100,7 @@ export default function AdminEventsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <TableSkeleton columns={5} />
+            <TableSkeleton columns={6} />
           ) : (
             <Table>
               <TableHeader>
@@ -99,6 +110,7 @@ export default function AdminEventsPage() {
                   <TableHead>Stages</TableHead>
                   <TableHead>Prizes</TableHead>
                   <TableHead>Publish</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -143,6 +155,41 @@ export default function AdminEventsPage() {
                           Publish
                         </Button>
                       )}
+                    </TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" aria-label="Duplicate event" onClick={() => handleDuplicate(event)}>
+                        <Copy className="size-4" />
+                      </Button>
+                      {event.status !== "ARCHIVED" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={archiveEvent.isPending}
+                          onClick={() =>
+                            archiveEvent.mutate(event.id, {
+                              onSuccess: () => toast.success("Event archived."),
+                              onError: (err) =>
+                                toast.error(err instanceof ApiError ? err.message : "Failed to archive."),
+                            })
+                          }
+                        >
+                          Archive
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={deleteEvent.isPending}
+                        aria-label="Delete event"
+                        onClick={() =>
+                          deleteEvent.mutate(event.id, {
+                            onSuccess: () => toast.success("Event deleted."),
+                            onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to delete."),
+                          })
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

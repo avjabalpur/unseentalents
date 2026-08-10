@@ -1,4 +1,4 @@
-export type UserRole = "ADMIN" | "USER";
+export type UserRole = "ADMIN" | "MODERATOR" | "USER";
 export type UserStatus = "ACTIVE" | "SUSPENDED";
 export type MediaType = "VIDEO" | "IMAGE";
 export type EventStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
@@ -26,6 +26,8 @@ export type CreditTransactionType =
   | "REFUND";
 export type CouponStatus = "ACTIVE" | "EXPIRED" | "DISABLED";
 export type TopicStatus = "DRAFT" | "PUBLISHED";
+export type ReportTargetType = "SUBMISSION" | "USER";
+export type ReportStatus = "PENDING" | "REVIEWED" | "DISMISSED";
 
 export interface User {
   id: string;
@@ -108,12 +110,48 @@ export interface Submission {
   notes: string | null;
   processingStatus: ProcessingStatus;
   status: SubmissionStatus;
+  rejectionReason: string | null;
   uploadedAt: string;
   voteCount: number;
   ownerName: string | null;
   ownerUsername: string | null;
   eventId: string | null;
   eventName: string | null;
+}
+
+export interface ActivityLog {
+  id: string;
+  entityType: string;
+  entityId: string;
+  actorId: string | null;
+  actorName: string | null;
+  actorUsername: string | null;
+  action: string;
+  logMetadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface Report {
+  id: string;
+  reporterId: string;
+  reporterName: string | null;
+  reporterUsername: string | null;
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: string;
+  notes: string | null;
+  status: ReportStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+}
+
+export interface SiteSettings {
+  id: string;
+  welcomeCreditAmount: number;
+  maxUploadSizeMb: number;
+  maintenanceMode: boolean;
+  updatedAt: string;
 }
 
 export interface Comment {

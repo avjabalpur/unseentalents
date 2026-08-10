@@ -5,8 +5,9 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.errors import AppError
+from app.models.event import Event
 from app.models.event_type import EventType
-from app.schemas.event_type import EventTypeCreate
+from app.schemas.event_type import EventTypeCreate, EventTypeUpdate
 
 
 async def list_event_types(db: AsyncSession) -> list[EventType]:
@@ -39,3 +40,31 @@ async def set_event_type_image(db: AsyncSession, event_type: EventType, image_ke
     await db.commit()
     await db.refresh(event_type)
     return event_type
+
+
+async def update_event_type(db: AsyncSession, event_type: EventType, data: EventTypeUpdate) -> EventType:
+    updates = data.model_dump(exclude_unset=True)
+    if "name" in updates and updates["name"] != event_type.name:
+        existing = await db.exec(select(EventType).where(EventType.name == updates["name"]))
+        if existing.first() is not None:
+            raise AppError(
+                "EVENT_TYPE_EXISTS", "An event type with this name already exists.", status.HTTP_409_CONFLICT
+            )
+    for field, value in updates.items():
+        setattr(event_type, field, value)
+    db.add(event_type)
+    await db.commit()
+    await db.refresh(event_type)
+    return event_type
+
+
+async def delete_event_type(db: AsyncSession, event_type: EventType) -> None:
+    in_use = await db.exec(select(Event).where(Event.event_type_id == event_type.id).limit(1))
+    if in_use.first() is not None:
+        raise AppError(
+            "EVENT_TYPE_IN_USE",
+            "This event type is used by at least one event and can't be deleted.",
+            status.HTTP_409_CONFLICT,
+        )
+    await db.delete(event_type)
+    await db.commit()

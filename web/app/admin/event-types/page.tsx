@@ -2,24 +2,88 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { Pencil, Trash2 } from "lucide-react";
 import { useEventTypes } from "@/lib/hooks/useEventTypes";
-import { useCreateEventType, useUploadEventTypeImage } from "@/lib/hooks/useAdmin";
+import { useCreateEventType, useDeleteEventType, useUpdateEventType, useUploadEventTypeImage } from "@/lib/hooks/useAdmin";
 import { ApiError, mediaUrl } from "@/lib/api-client";
-import type { MediaType } from "@/types/api";
+import type { EventType, MediaType } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
+
+function EditEventTypeSheet({ eventType }: { eventType: EventType }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(eventType.name);
+  const [description, setDescription] = useState(eventType.description ?? "");
+  const [mediaType, setMediaType] = useState<MediaType>(eventType.submissionMediaType);
+  const updateEventType = useUpdateEventType();
+
+  const handleSave = () => {
+    updateEventType.mutate(
+      { eventTypeId: eventType.id, name: name.trim(), description, submissionMediaType: mediaType },
+      {
+        onSuccess: () => {
+          toast.success("Event type updated.");
+          setOpen(false);
+        },
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to update event type."),
+      },
+    );
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger render={<Button size="sm" variant="outline" aria-label="Edit event type" />}>
+        <Pencil className="size-4" />
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Edit event type</SheetTitle>
+        </SheetHeader>
+        <SheetBody className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Submission type</Label>
+            <Select value={mediaType} onValueChange={(v) => v && setMediaType(v as MediaType)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="VIDEO">Video</SelectItem>
+                <SelectItem value="IMAGE">Image</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+          </div>
+        </SheetBody>
+        <SheetFooter>
+          <Button onClick={handleSave} disabled={updateEventType.isPending || !name.trim()}>
+            {updateEventType.isPending ? "Saving…" : "Save changes"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 export default function AdminEventTypesPage() {
   const { data: eventTypes, isLoading } = useEventTypes();
   const createEventType = useCreateEventType();
   const uploadImage = useUploadEventTypeImage();
+  const deleteEventType = useDeleteEventType();
 
   const [formOpen, setFormOpen] = useState(false);
   const [name, setName] = useState("");
@@ -96,7 +160,7 @@ export default function AdminEventTypesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <TableSkeleton columns={4} />
+            <TableSkeleton columns={5} />
           ) : (
             <Table>
               <TableHeader>
@@ -105,6 +169,7 @@ export default function AdminEventTypesPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Submission type</TableHead>
                   <TableHead>Upload cover image</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -129,6 +194,24 @@ export default function AdminEventTypesPage() {
                           className="max-w-56"
                           onChange={(e) => handleImageChange(et.id, e.target.files?.[0] ?? null)}
                         />
+                      </TableCell>
+                      <TableCell className="flex items-center gap-2">
+                        <EditEventTypeSheet eventType={et} />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={deleteEventType.isPending}
+                          aria-label="Delete event type"
+                          onClick={() =>
+                            deleteEventType.mutate(et.id, {
+                              onSuccess: () => toast.success("Event type deleted."),
+                              onError: (err) =>
+                                toast.error(err instanceof ApiError ? err.message : "Failed to delete event type."),
+                            })
+                          }
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );

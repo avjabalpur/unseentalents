@@ -8,6 +8,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.errors import AppError
 from app.models.enums import EventStatus
 from app.models.event import Event
+from app.models.participation import Participation
+from app.models.prize import Prize
 from app.models.stage import Stage
 from app.models.user import User
 from app.schemas.event import EventCreate, EventUpdate
@@ -32,8 +34,11 @@ async def list_published_events(db: AsyncSession) -> list[Event]:
     return list(result.all())
 
 
-async def list_all_events(db: AsyncSession) -> list[Event]:
-    result = await db.exec(select(Event).order_by(Event.created_at.desc()))
+async def list_all_events(db: AsyncSession, limit: int | None = None, offset: int = 0) -> list[Event]:
+    query = select(Event).order_by(Event.created_at.desc()).offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
+    result = await db.exec(query)
     return list(result.all())
 
 
@@ -60,3 +65,23 @@ async def update_event(db: AsyncSession, event: Event, data: EventUpdate) -> Eve
     await db.commit()
     await db.refresh(event)
     return event
+
+
+async def delete_event(db: AsyncSession, event: Event) -> None:
+    in_use = await db.exec(select(Participation).where(Participation.event_id == event.id).limit(1))
+    if in_use.first() is not None:
+        raise AppError(
+            "EVENT_HAS_PARTICIPANTS",
+            "This event already has participants and can't be deleted — archive it instead.",
+            status.HTTP_409_CONFLICT,
+        )
+    # No participations means no submissions/votes/stage results reference this event's
+    # stages either, so it's safe to clear stages and prizes before removing the event itself.
+    stages = await db.exec(select(Stage).where(Stage.event_id == event.id))
+    for stage in stages.all():
+        await db.delete(stage)
+    prizes = await db.exec(select(Prize).where(Prize.event_id == event.id))
+    for prize in prizes.all():
+        await db.delete(prize)
+    await db.delete(event)
+    await db.commit()

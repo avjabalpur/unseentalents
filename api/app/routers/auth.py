@@ -8,6 +8,7 @@ from app.core.dependencies import CurrentUser
 from app.core.errors import AppError
 from app.core.security import REFRESH_TOKEN_TYPE, create_access_token, create_refresh_token, decode_token
 from app.db import get_db
+from app.models.enums import UserStatus
 from app.models.user import User
 from app.schemas.auth import ChangePasswordRequest, LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.user import UserRead
@@ -65,6 +66,9 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
     user = await db.get(User, user_id)
     if user is None:
         raise AppError("UNAUTHENTICATED", "User not found.", status.HTTP_401_UNAUTHORIZED)
+    if user.status != UserStatus.ACTIVE:
+        response.delete_cookie(REFRESH_COOKIE_NAME, path=f"{settings.api_prefix}/auth")
+        raise AppError("ACCOUNT_SUSPENDED", "Your account has been suspended.", status.HTTP_403_FORBIDDEN)
 
     access_token = create_access_token(user.id)
     new_refresh_token = create_refresh_token(user.id)

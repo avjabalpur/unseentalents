@@ -23,6 +23,7 @@ class Submission(SQLModel, table=True):
     notes: str | None = None
     processing_status: ProcessingStatus = Field(default=ProcessingStatus.PENDING)
     status: SubmissionStatus = Field(default=SubmissionStatus.PENDING_MODERATION)
+    rejection_reason: str | None = None
     uploaded_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), sa_type=sa.DateTime(timezone=True)
     )

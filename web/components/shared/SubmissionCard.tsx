@@ -1,10 +1,92 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ThumbsUp } from "lucide-react";
+import { toast } from "sonner";
+import { Flag, History, ThumbsUp } from "lucide-react";
 import type { Submission } from "@/types/api";
-import { mediaUrl } from "@/lib/api-client";
+import { ApiError, mediaUrl } from "@/lib/api-client";
 import { formatDate } from "@/lib/format";
+import { useAuth } from "@/lib/auth-context";
+import { useSubmissionHistory } from "@/lib/hooks/useActivity";
+import { useCreateReport } from "@/lib/hooks/useReports";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { MediaPlayer } from "@/components/shared/MediaPlayer";
+import { ActivityTimeline } from "@/components/shared/ActivityTimeline";
+
+const REPORT_REASONS = [
+  "Inappropriate content",
+  "Copyright violation",
+  "Spam",
+  "Harassment",
+  "Other",
+];
+
+function ReportSubmissionSheet({ submissionId }: { submissionId: string }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [notes, setNotes] = useState("");
+  const createReport = useCreateReport();
+
+  const handleSubmit = () => {
+    createReport.mutate(
+      { targetType: "SUBMISSION", targetId: submissionId, reason, notes: notes.trim() || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Report submitted — thanks for letting us know.");
+          setOpen(false);
+          setReason("");
+          setNotes("");
+        },
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to submit report."),
+      },
+    );
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Report this entry" />}>
+        <Flag className="size-4" />
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Report this entry</SheetTitle>
+        </SheetHeader>
+        <SheetBody className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Reason</Label>
+            <Select value={reason} onValueChange={(v) => v && setReason(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a reason" />
+              </SelectTrigger>
+              <SelectContent>
+                {REPORT_REASONS.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Additional details (optional)</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
+          </div>
+        </SheetBody>
+        <SheetFooter>
+          <Button onClick={handleSubmit} disabled={!reason || createReport.isPending}>
+            {createReport.isPending ? "Submitting…" : "Submit report"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 interface SubmissionCardProps {
   submission: Submission;
@@ -13,6 +95,11 @@ interface SubmissionCardProps {
 }
 
 export function SubmissionCard({ submission, rank, action }: SubmissionCardProps) {
+  const { user } = useAuth();
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const { data: history, isLoading: historyLoading } = useSubmissionHistory(
+    historyOpen ? submission.id : undefined,
+  );
   const posterUrl = mediaUrl(submission.thumbnailKey);
   const videoUrl = submission.mediaType === "VIDEO" ? mediaUrl(submission.storageKey) : null;
   const imageUrl = submission.mediaType === "IMAGE" ? mediaUrl(submission.storageKey) : null;
@@ -56,6 +143,26 @@ export function SubmissionCard({ submission, rank, action }: SubmissionCardProps
           <ThumbsUp className="size-4" />
           {submission.voteCount} vote{submission.voteCount === 1 ? "" : "s"}
         </span>
+        <div className="flex items-center">
+          <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+            <SheetTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" aria-label="View history">
+                  <History className="size-4" />
+                </Button>
+              }
+            />
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Entry history</SheetTitle>
+              </SheetHeader>
+              <SheetBody>
+                <ActivityTimeline logs={history} isLoading={historyLoading} />
+              </SheetBody>
+            </SheetContent>
+          </Sheet>
+          {user && <ReportSubmissionSheet submissionId={submission.id} />}
+        </div>
       </CardContent>
       {action && <CardFooter className="pb-3">{action}</CardFooter>}
     </Card>

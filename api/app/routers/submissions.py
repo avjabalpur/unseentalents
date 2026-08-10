@@ -1,16 +1,16 @@
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, UploadFile, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.dependencies import CurrentUser, require_role
 from app.core.errors import AppError
 from app.core.rate_limit import rate_limiter
 from app.db import get_db
-from app.models.enums import UserRole
+from app.models.enums import UserRole, UserStatus
 from app.models.submission import Submission
 from app.models.user import User
-from app.schemas.submission import SubmissionRead
+from app.schemas.submission import BulkModerateRequest, SubmissionRead
 from app.services import (
     event_service,
     event_type_service,
@@ -82,6 +82,9 @@ async def create_submission(
 @router.get("/submissions/{submission_id}", response_model=SubmissionRead)
 async def get_submission(submission_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     submission = await submission_service.get_submission_or_404(db, submission_id)
+    owner = await submission_service.get_owner(db, submission)
+    if owner is None or owner.status != UserStatus.ACTIVE:
+        raise AppError("NOT_FOUND", "Submission not found.", status.HTTP_404_NOT_FOUND)
     return await _to_read(db, submission)
 
 
@@ -111,10 +114,12 @@ async def list_my_votes(current_user: CurrentUser, db: AsyncSession = Depends(ge
 
 @router.get("/admin/submissions/pending", response_model=list[SubmissionRead])
 async def list_pending(
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    limit: int | None = Query(None, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
     db: AsyncSession = Depends(get_db),
 ):
-    submissions = await submission_service.list_pending_moderation(db)
+    submissions = await submission_service.list_pending_moderation(db, limit=limit, offset=offset)
     return [await _to_read(db, s) for s in submissions]
 
 
@@ -122,9 +127,26 @@ async def list_pending(
 async def moderate(
     submission_id: uuid.UUID,
     approve: bool,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    reason: str | None = None,
+    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
     db: AsyncSession = Depends(get_db),
 ):
     submission = await submission_service.get_submission_or_404(db, submission_id)
-    updated = await submission_service.moderate_submission(db, submission, approve)
+    updated = await submission_service.moderate_submission(db, submission, approve, reason, actor_id=admin.id)
     return await _to_read(db, updated)
+
+
+@router.post("/submissions/bulk-moderate", response_model=list[SubmissionRead])
+async def bulk_moderate(
+    payload: BulkModerateRequest,
+    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
+    db: AsyncSession = Depends(get_db),
+):
+    results = []
+    for submission_id in payload.submission_ids:
+        submission = await submission_service.get_submission_or_404(db, submission_id)
+        updated = await submission_service.moderate_submission(
+            db, submission, payload.approve, payload.reason, actor_id=admin.id
+        )
+        results.append(await _to_read(db, updated))
+    return results

@@ -1,3 +1,4 @@
+from app.models.activity_log import ActivityLog
 from app.models.comment import Comment
 from app.models.contact_message import ContactMessage
 from app.models.coupon import Coupon, CouponRedemption
@@ -6,6 +7,8 @@ from app.models.event import Event
 from app.models.event_type import EventType
 from app.models.participation import Participation
 from app.models.prize import Prize
+from app.models.report import Report
+from app.models.site_settings import SiteSettings
 from app.models.slide import Slide
 from app.models.stage import Stage
 from app.models.stage_result import StageResult
@@ -31,4 +34,7 @@ __all__ = [
     "Slide",
     "ContactMessage",
     "Comment",
+    "ActivityLog",
+    "Report",
+    "SiteSettings",
 ]

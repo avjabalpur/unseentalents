@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
+  Activity,
   Bell,
   CalendarRange,
   ChevronDown,
   ExternalLink,
   FileText,
+  Flag,
   GalleryHorizontal,
   LayoutDashboard,
   LogOut,
@@ -26,7 +28,7 @@ import {
   Users as UsersIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { usePendingSubmissions, useAdminContactMessages } from "@/lib/hooks/useAdmin";
+import { usePendingSubmissions, useAdminContactMessages, useAdminReports } from "@/lib/hooks/useAdmin";
 import { mediaUrl } from "@/lib/api-client";
 import { Brand, BrandMark } from "@/components/shared/Brand";
 import { Button } from "@/components/ui/button";
@@ -44,18 +46,21 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/event-types", label: "Event Types", icon: Tags },
-  { href: "/admin/events", label: "Events", icon: CalendarRange },
-  { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck },
-  { href: "/admin/users", label: "Users", icon: UsersIcon },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, adminOnly: false },
+  { href: "/admin/event-types", label: "Event Types", icon: Tags, adminOnly: true },
+  { href: "/admin/events", label: "Events", icon: CalendarRange, adminOnly: true },
+  { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck, adminOnly: false },
+  { href: "/admin/reports", label: "Reports", icon: Flag, adminOnly: false },
+  { href: "/admin/users", label: "Users", icon: UsersIcon, adminOnly: true },
 ];
 
 const CONFIG_LINKS = [
-  { href: "/admin/topics", label: "Topics", icon: FileText },
-  { href: "/admin/slides", label: "Hero Slider", icon: GalleryHorizontal },
-  { href: "/admin/coupons", label: "Coupons", icon: Ticket },
-  { href: "/admin/contact", label: "Contact Messages", icon: Mail },
+  { href: "/admin/topics", label: "Topics", icon: FileText, adminOnly: true },
+  { href: "/admin/slides", label: "Hero Slider", icon: GalleryHorizontal, adminOnly: true },
+  { href: "/admin/coupons", label: "Coupons", icon: Ticket, adminOnly: true },
+  { href: "/admin/contact", label: "Contact Messages", icon: Mail, adminOnly: true },
+  { href: "/admin/activity", label: "Activity", icon: Activity, adminOnly: true },
+  { href: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },
 ];
 
 const ALL_NAV_ITEMS = [...NAV_LINKS, ...CONFIG_LINKS];
@@ -72,14 +77,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const isAdmin = user?.role === "ADMIN";
+  const hasAdminAccess = user?.role === "ADMIN" || user?.role === "MODERATOR";
+  const visibleNavLinks = NAV_LINKS.filter((l) => !l.adminOnly || isAdmin);
+  const visibleConfigLinks = CONFIG_LINKS.filter((l) => !l.adminOnly || isAdmin);
+
   const { data: pendingSubmissions } = usePendingSubmissions();
-  const { data: contactMessages } = useAdminContactMessages();
+  const { data: contactMessages } = useAdminContactMessages(isAdmin);
+  const { data: pendingReports } = useAdminReports("PENDING");
   const pendingCount = pendingSubmissions?.length ?? 0;
   const unreadContactCount = contactMessages?.filter((m) => !m.isRead).length ?? 0;
-  const notificationCount = pendingCount + unreadContactCount;
+  const pendingReportCount = pendingReports?.length ?? 0;
+  const notificationCount = pendingCount + unreadContactCount + pendingReportCount;
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "ADMIN")) {
+    if (!isLoading && (!user || (user.role !== "ADMIN" && user.role !== "MODERATOR"))) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [isLoading, user, router, pathname]);
@@ -140,7 +152,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const themeClass = theme === "light" ? "admin-light" : "admin-dark";
 
-  if (isLoading || !user || user.role !== "ADMIN") {
+  if (isLoading || !user || !hasAdminAccess) {
     return (
       <div className={cn("flex min-h-screen bg-background", themeClass)}>
         <aside className="flex h-screen w-64 shrink-0 flex-col gap-2 border-r border-sidebar-border bg-sidebar p-4">
@@ -175,7 +187,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Link>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {NAV_LINKS.map((item) => {
+          {visibleNavLinks.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
@@ -196,56 +208,58 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
 
-          <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
-            <CollapsibleTrigger
-              render={
-                <button
-                  type="button"
-                  title={sidebarCollapsed ? "Configuration" : undefined}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
-                    CONFIG_LINKS.some((l) => pathname === l.href)
-                      ? "font-medium text-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  )}
-                >
-                  <Settings className="size-4.5 shrink-0 text-muted-foreground" />
-                  <span className={cn("flex-1 text-left", sidebarCollapsed && "hidden")}>Configuration</span>
-                  <ChevronDown
+          {visibleConfigLinks.length > 0 && (
+            <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
+              <CollapsibleTrigger
+                render={
+                  <button
+                    type="button"
+                    title={sidebarCollapsed ? "Configuration" : undefined}
                     className={cn(
-                      "size-4 shrink-0 text-muted-foreground transition-transform",
-                      configOpen && "rotate-180",
-                      sidebarCollapsed && "hidden",
+                      "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
+                      visibleConfigLinks.some((l) => pathname === l.href)
+                        ? "font-medium text-foreground"
+                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                     )}
-                  />
-                </button>
-              }
-            />
-            <CollapsiblePanel>
-              <div className={cn("space-y-1 pt-1", !sidebarCollapsed && "pl-5")}>
-                {CONFIG_LINKS.map((item) => {
-                  const isActive = pathname === item.href;
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      title={sidebarCollapsed ? item.label : undefined}
+                  >
+                    <Settings className="size-4.5 shrink-0 text-muted-foreground" />
+                    <span className={cn("flex-1 text-left", sidebarCollapsed && "hidden")}>Configuration</span>
+                    <ChevronDown
                       className={cn(
-                        "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm tracking-wide uppercase transition-all",
-                        isActive
-                          ? "border-primary bg-gradient-to-r from-primary/15 to-transparent font-medium text-foreground"
-                          : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        "size-4 shrink-0 text-muted-foreground transition-transform",
+                        configOpen && "rotate-180",
+                        sidebarCollapsed && "hidden",
                       )}
-                    >
-                      <Icon className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-                      <span className={cn(sidebarCollapsed && "hidden")}>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </CollapsiblePanel>
-          </Collapsible>
+                    />
+                  </button>
+                }
+              />
+              <CollapsiblePanel>
+                <div className={cn("space-y-1 pt-1", !sidebarCollapsed && "pl-5")}>
+                  {visibleConfigLinks.map((item) => {
+                    const isActive = pathname === item.href;
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        title={sidebarCollapsed ? item.label : undefined}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm tracking-wide uppercase transition-all",
+                          isActive
+                            ? "border-primary bg-gradient-to-r from-primary/15 to-transparent font-medium text-foreground"
+                            : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        )}
+                      >
+                        <Icon className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                        <span className={cn(sidebarCollapsed && "hidden")}>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </CollapsiblePanel>
+            </Collapsible>
+          )}
         </nav>
       </aside>
 
@@ -338,6 +352,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {unreadContactCount > 0 && (
                     <DropdownMenuItem render={<Link href="/admin/contact" />}>
                       {unreadContactCount} unread contact message{unreadContactCount === 1 ? "" : "s"}
+                    </DropdownMenuItem>
+                  )}
+                  {pendingReportCount > 0 && (
+                    <DropdownMenuItem render={<Link href="/admin/reports" />}>
+                      {pendingReportCount} pending report{pendingReportCount === 1 ? "" : "s"}
                     </DropdownMenuItem>
                   )}
                 </>

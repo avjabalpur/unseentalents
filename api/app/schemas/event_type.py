@@ -10,6 +10,12 @@ class EventTypeCreate(CamelModel):
     submission_media_type: MediaType = MediaType.VIDEO
 
 
+class EventTypeUpdate(CamelModel):
+    name: str | None = None
+    description: str | None = None
+    submission_media_type: MediaType | None = None
+
+
 class EventTypeRead(CamelModel):
     id: uuid.UUID
     name: str

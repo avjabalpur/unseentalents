@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.dependencies import CurrentUser, require_role
@@ -67,12 +67,24 @@ async def update_event(
     return await _to_read(db, updated)
 
 
-@router.get("/admin/all", response_model=list[EventRead])
-async def list_all_events_admin(
+@router.delete("/{event_id}", status_code=204)
+async def delete_event(
+    event_id: uuid.UUID,
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    events = await event_service.list_all_events(db)
+    event = await event_service.get_event_or_404(db, event_id)
+    await event_service.delete_event(db, event)
+
+
+@router.get("/admin/all", response_model=list[EventRead])
+async def list_all_events_admin(
+    limit: int | None = Query(None, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    admin: User = Depends(require_role(UserRole.ADMIN)),
+    db: AsyncSession = Depends(get_db),
+):
+    events = await event_service.list_all_events(db, limit=limit, offset=offset)
     return [await _to_read(db, event) for event in events]
 
 

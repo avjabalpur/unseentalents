@@ -8,13 +8,13 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.errors import AppError
 from app.media.thumbnail import generate_image_thumbnail, generate_video_thumbnail
-from app.models.enums import MediaType, ProcessingStatus, SubmissionStatus
+from app.models.enums import MediaType, ProcessingStatus, SubmissionStatus, UserStatus
 from app.models.event_type import EventType
 from app.models.participation import Participation
 from app.models.submission import Submission
 from app.models.user import User
 from app.models.vote import Vote
-from app.services import stage_service
+from app.services import activity_log_service, stage_service
 from app.services.credit_service import spend_upload_credit
 from app.storage.local import get_storage_backend
 
@@ -32,19 +32,29 @@ async def get_submission_or_404(db: AsyncSession, submission_id: uuid.UUID) -> S
 async def list_submissions_for_stage(
     db: AsyncSession, stage_id: uuid.UUID, approved_only: bool = True
 ) -> list[Submission]:
-    query = select(Submission).where(Submission.stage_id == stage_id)
+    # Suspended users' entries are excluded from every public listing (event pages, leaderboards).
+    query = (
+        select(Submission)
+        .join(Participation, Participation.id == Submission.participation_id)
+        .join(User, User.id == Participation.user_id)
+        .where(Submission.stage_id == stage_id, User.status == UserStatus.ACTIVE)
+    )
     if approved_only:
         query = query.where(Submission.status == SubmissionStatus.APPROVED)
     result = await db.exec(query.order_by(Submission.uploaded_at.desc()))
     return list(result.all())
 
 
-async def list_pending_moderation(db: AsyncSession) -> list[Submission]:
-    result = await db.exec(
+async def list_pending_moderation(db: AsyncSession, limit: int | None = None, offset: int = 0) -> list[Submission]:
+    query = (
         select(Submission)
         .where(Submission.status == SubmissionStatus.PENDING_MODERATION)
         .order_by(Submission.uploaded_at)
+        .offset(offset)
     )
+    if limit is not None:
+        query = query.limit(limit)
+    result = await db.exec(query)
     return list(result.all())
 
 
@@ -60,9 +70,24 @@ async def get_owner(db: AsyncSession, submission: Submission) -> User | None:
     return await db.get(User, participation.user_id)
 
 
-async def moderate_submission(db: AsyncSession, submission: Submission, approve: bool) -> Submission:
+async def moderate_submission(
+    db: AsyncSession,
+    submission: Submission,
+    approve: bool,
+    reason: str | None = None,
+    actor_id: uuid.UUID | None = None,
+) -> Submission:
     submission.status = SubmissionStatus.APPROVED if approve else SubmissionStatus.REJECTED
+    submission.rejection_reason = None if approve else reason
     db.add(submission)
+    activity_log_service.record(
+        db,
+        "SUBMISSION",
+        submission.id,
+        "APPROVED" if approve else "REJECTED",
+        actor_id=actor_id,
+        metadata={"reason": reason} if reason else None,
+    )
     await db.commit()
     await db.refresh(submission)
     return submission
@@ -146,6 +171,7 @@ async def upload_submission(
 
     user = await db.get(User, participation.user_id)
     await spend_upload_credit(db, user, reference_id=submission.id)
+    activity_log_service.record(db, "SUBMISSION", submission.id, "SUBMITTED", actor_id=user.id)
 
     await db.commit()
     await db.refresh(submission)
@@ -182,4 +208,7 @@ async def process_thumbnail(db: AsyncSession, submission: Submission) -> None:
     submission.processing_status = ProcessingStatus.READY if success else ProcessingStatus.FAILED
     submission.thumbnail_key = thumb_key if success else None
     db.add(submission)
+    activity_log_service.record(
+        db, "SUBMISSION", submission.id, "THUMBNAIL_READY" if success else "THUMBNAIL_FAILED"
+    )
     await db.commit()

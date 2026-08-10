@@ -53,5 +53,5 @@ async def advance_stage(
     db: AsyncSession = Depends(get_db),
 ):
     stage = await stage_service.get_stage_or_404(db, stage_id)
-    await stage_service.advance_participations(db, stage, payload.participation_ids)
+    await stage_service.advance_participations(db, stage, payload.participation_ids, actor_id=admin.id)
     return {"success": True}

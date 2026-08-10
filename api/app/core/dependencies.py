@@ -32,8 +32,10 @@ async def get_current_user(
 
     user_id = uuid.UUID(payload["sub"])
     user = await db.get(User, user_id)
-    if user is None or user.status != UserStatus.ACTIVE:
-        raise AppError("UNAUTHENTICATED", "User not found or inactive.", status.HTTP_401_UNAUTHORIZED)
+    if user is None:
+        raise AppError("UNAUTHENTICATED", "Invalid or expired token.", status.HTTP_401_UNAUTHORIZED)
+    if user.status != UserStatus.ACTIVE:
+        raise AppError("ACCOUNT_SUSPENDED", "Your account has been suspended.", status.HTTP_403_FORBIDDEN)
 
     return user
 

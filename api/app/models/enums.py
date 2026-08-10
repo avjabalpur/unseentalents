@@ -3,6 +3,7 @@ from enum import Enum
 
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
+    MODERATOR = "MODERATOR"
     USER = "USER"
 
 
@@ -80,3 +81,14 @@ class CouponStatus(str, Enum):
 class TopicStatus(str, Enum):
     DRAFT = "DRAFT"
     PUBLISHED = "PUBLISHED"
+
+
+class ReportTargetType(str, Enum):
+    SUBMISSION = "SUBMISSION"
+    USER = "USER"
+
+
+class ReportStatus(str, Enum):
+    PENDING = "PENDING"
+    REVIEWED = "REVIEWED"
+    DISMISSED = "DISMISSED"

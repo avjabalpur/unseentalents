@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -20,39 +22,50 @@ def _to_items(rows) -> list[CountItem]:
     return items
 
 
-async def get_admin_stats(db: AsyncSession) -> AdminStats:
-    submissions_by_event = await db.exec(
+async def get_admin_stats(
+    db: AsyncSession, date_from: datetime | None = None, date_to: datetime | None = None
+) -> AdminStats:
+    submissions_query = (
         select(Event.name, func.count(Submission.id))
         .select_from(Submission)
         .join(Participation, Participation.id == Submission.participation_id)
         .join(Event, Event.id == Participation.event_id)
-        .group_by(Event.name)
-        .order_by(func.count(Submission.id).desc())
     )
-
-    submissions_by_event_type = await db.exec(
+    submissions_by_type_query = (
         select(EventType.name, func.count(Submission.id))
         .select_from(Submission)
         .join(Participation, Participation.id == Submission.participation_id)
         .join(Event, Event.id == Participation.event_id)
         .join(EventType, EventType.id == Event.event_type_id)
-        .group_by(EventType.name)
-        .order_by(func.count(Submission.id).desc())
     )
-
-    submissions_by_status = await db.exec(
-        select(Submission.status, func.count(Submission.id)).group_by(Submission.status)
-    )
-
-    votes_by_event = await db.exec(
+    submissions_status_query = select(Submission.status, func.count(Submission.id))
+    votes_query = (
         select(Event.name, func.count(Vote.id))
         .select_from(Vote)
         .join(Submission, Submission.id == Vote.submission_id)
         .join(Participation, Participation.id == Submission.participation_id)
         .join(Event, Event.id == Participation.event_id)
-        .group_by(Event.name)
-        .order_by(func.count(Vote.id).desc())
     )
+
+    if date_from is not None:
+        submissions_query = submissions_query.where(Submission.uploaded_at >= date_from)
+        submissions_by_type_query = submissions_by_type_query.where(Submission.uploaded_at >= date_from)
+        submissions_status_query = submissions_status_query.where(Submission.uploaded_at >= date_from)
+        votes_query = votes_query.where(Vote.created_at >= date_from)
+    if date_to is not None:
+        submissions_query = submissions_query.where(Submission.uploaded_at <= date_to)
+        submissions_by_type_query = submissions_by_type_query.where(Submission.uploaded_at <= date_to)
+        submissions_status_query = submissions_status_query.where(Submission.uploaded_at <= date_to)
+        votes_query = votes_query.where(Vote.created_at <= date_to)
+
+    submissions_by_event = await db.exec(
+        submissions_query.group_by(Event.name).order_by(func.count(Submission.id).desc())
+    )
+    submissions_by_event_type = await db.exec(
+        submissions_by_type_query.group_by(EventType.name).order_by(func.count(Submission.id).desc())
+    )
+    submissions_by_status = await db.exec(submissions_status_query.group_by(Submission.status))
+    votes_by_event = await db.exec(votes_query.group_by(Event.name).order_by(func.count(Vote.id).desc()))
 
     users_by_role = await db.exec(select(User.role, func.count(User.id)).group_by(User.role))
 

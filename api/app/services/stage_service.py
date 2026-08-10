@@ -14,6 +14,22 @@ from app.models.stage_result import StageResult
 from app.models.submission import Submission
 from app.models.vote import Vote
 from app.schemas.stage import StageCreate
+from app.services import activity_log_service
+
+
+async def _log_stage_outcome(
+    db: AsyncSession, stage: Stage, participation_id: uuid.UUID, action: str, actor_id: uuid.UUID | None = None
+) -> None:
+    result = await db.exec(
+        select(Submission.id).where(
+            Submission.participation_id == participation_id, Submission.stage_id == stage.id
+        )
+    )
+    submission_id = result.first()
+    if submission_id is not None:
+        activity_log_service.record(
+            db, "SUBMISSION", submission_id, action, actor_id=actor_id, metadata={"stage": stage.name.value}
+        )
 
 
 async def get_stage_or_404(db: AsyncSession, stage_id: uuid.UUID) -> Stage:
@@ -112,9 +128,13 @@ async def close_stage(db: AsyncSession, stage: Stage) -> list[StageResult]:
             next_stage = await get_next_stage(db, stage.event_id, stage.order_index)
             if next_stage is not None:
                 participation.current_stage_id = next_stage.id
+                await _log_stage_outcome(db, stage, participation_id, "ADVANCED_STAGE")
             else:
                 participation.status = ParticipationStatus.WINNER
+                await _log_stage_outcome(db, stage, participation_id, "WON")
             db.add(participation)
+        else:
+            await _log_stage_outcome(db, stage, participation_id, "ELIMINATED")
 
     stage.closed_at = datetime.now(timezone.utc)
     db.add(stage)
@@ -122,7 +142,9 @@ async def close_stage(db: AsyncSession, stage: Stage) -> list[StageResult]:
     return stage_results
 
 
-async def advance_participations(db: AsyncSession, stage: Stage, participation_ids: list[uuid.UUID]) -> None:
+async def advance_participations(
+    db: AsyncSession, stage: Stage, participation_ids: list[uuid.UUID], actor_id: uuid.UUID | None = None
+) -> None:
     """Admin-curated advancement: move the selected participations to the next stage."""
     next_stage = await get_next_stage(db, stage.event_id, stage.order_index)
     for participation_id in participation_ids:
@@ -131,8 +153,10 @@ async def advance_participations(db: AsyncSession, stage: Stage, participation_i
             continue
         if next_stage is not None:
             participation.current_stage_id = next_stage.id
+            await _log_stage_outcome(db, stage, participation_id, "ADVANCED_STAGE", actor_id=actor_id)
         else:
             participation.status = ParticipationStatus.WINNER
+            await _log_stage_outcome(db, stage, participation_id, "WON", actor_id=actor_id)
         db.add(participation)
 
         result = await db.exec(

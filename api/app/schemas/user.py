@@ -25,3 +25,16 @@ class UserUpdate(CamelModel):
     facebook_url: str | None = None
     instagram_url: str | None = None
     twitter_url: str | None = None
+
+
+class UserStatusUpdate(CamelModel):
+    status: UserStatus
+
+
+class UserRoleUpdate(CamelModel):
+    role: UserRole
+
+
+class BulkUserStatusUpdate(CamelModel):
+    user_ids: list[uuid.UUID]
+    status: UserStatus
