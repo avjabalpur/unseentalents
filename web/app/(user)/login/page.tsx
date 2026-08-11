@@ -49,7 +49,7 @@ function LoginForm() {
       </Link>
 
       <p className="mb-2 text-center text-sm font-semibold uppercase tracking-[0.3em] text-primary">Welcome back</p>
-      <h1 className="text-center text-2xl font-bold text-white sm:text-3xl">Log in to your account</h1>
+      <h1 className="font-heading text-center text-2xl font-bold text-white sm:text-3xl">Log in to your account</h1>
       <p className="mt-2 text-center text-base text-muted-foreground">
         Vote for your favorites or continue your entry.
       </p>

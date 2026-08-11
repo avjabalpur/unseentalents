@@ -12,6 +12,7 @@ from app.core.errors import AppError, app_error_handler, validation_error_handle
 from app.jobs.scheduler import start_scheduler, stop_scheduler
 from app.routers import (
     activity,
+    announcements,
     auth,
     comments,
     contact,
@@ -67,6 +68,7 @@ settings.storage_root.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(settings.storage_root)), name="media")
 
 for router in (
+    announcements.router,
     auth.router,
     users.router,
     credits.router,

@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { UserDetailSheet } from "@/components/admin/UserDetailSheet";
 import { ExportCsvButton } from "@/components/admin/ExportCsvButton";
 import { UserSearch } from "lucide-react";

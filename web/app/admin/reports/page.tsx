@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 const STATUS_BADGE: Record<ReportStatus, "secondary" | "default" | "destructive"> = {

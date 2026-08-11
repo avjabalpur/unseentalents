@@ -17,7 +17,7 @@ import { MediaPlayer } from "@/components/shared/MediaPlayer";
 import { ActivityTimeline } from "@/components/shared/ActivityTimeline";
 import { CardGridSkeleton } from "@/components/admin/CardGridSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { ExportCsvButton } from "@/components/admin/ExportCsvButton";
 
 function HistoryTrigger({ submissionId }: { submissionId: string }) {

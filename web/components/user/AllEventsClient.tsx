@@ -51,7 +51,7 @@ function EventTile({
               </span>
             )}
           </div>
-          <h3 className="text-xl font-bold text-white transition-colors group-hover:text-primary sm:text-2xl">
+          <h3 className="font-heading text-xl font-bold text-white transition-colors group-hover:text-primary sm:text-2xl">
             {event.name}
           </h3>
           {event.description && (

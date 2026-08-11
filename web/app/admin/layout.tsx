@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   LogOut,
   Mail,
+  Megaphone,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -57,6 +58,7 @@ const NAV_LINKS = [
 const CONFIG_LINKS = [
   { href: "/admin/topics", label: "Topics", icon: FileText, adminOnly: true },
   { href: "/admin/slides", label: "Hero Slider", icon: GalleryHorizontal, adminOnly: true },
+  { href: "/admin/announcements", label: "Announcements", icon: Megaphone, adminOnly: true },
   { href: "/admin/coupons", label: "Coupons", icon: Ticket, adminOnly: true },
   { href: "/admin/contact", label: "Contact Messages", icon: Mail, adminOnly: true },
   { href: "/admin/activity", label: "Activity", icon: Activity, adminOnly: true },

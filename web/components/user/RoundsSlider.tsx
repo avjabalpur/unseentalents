@@ -82,7 +82,7 @@ export function RoundsSlider() {
 
   return (
     <section
-      className="relative overflow-hidden border-t border-white/10 bg-[#2F2F2F] py-16"
+      className="relative overflow-hidden border-t border-white/10 bg-black py-16"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -98,7 +98,7 @@ export function RoundsSlider() {
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">The journey</p>
-              <h2 className="mt-1 text-2xl font-semibold uppercase tracking-wide text-white sm:text-3xl">
+              <h2 className="font-heading mt-1 text-2xl font-semibold uppercase tracking-wide text-white sm:text-3xl">
                 Talent rounds
               </h2>
               <div className="mt-3 h-[3px] w-24 overflow-hidden rounded-full bg-white/10">

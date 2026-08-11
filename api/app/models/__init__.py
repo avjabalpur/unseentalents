@@ -1,4 +1,5 @@
 from app.models.activity_log import ActivityLog
+from app.models.announcement import Announcement
 from app.models.comment import Comment
 from app.models.contact_message import ContactMessage
 from app.models.coupon import Coupon, CouponRedemption
@@ -37,4 +38,5 @@ __all__ = [
     "ActivityLog",
     "Report",
     "SiteSettings",
+    "Announcement",
 ]

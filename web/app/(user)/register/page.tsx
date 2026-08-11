@@ -75,7 +75,7 @@ export default function RegisterPage() {
         <p className="mb-2 text-center text-sm font-semibold uppercase tracking-[0.3em] text-primary">
           Join the stage
         </p>
-        <h1 className="text-center text-2xl font-bold text-white sm:text-3xl">Create your account</h1>
+        <h1 className="font-heading text-center text-2xl font-bold text-white sm:text-3xl">Create your account</h1>
         <p className="mt-2 text-center text-base text-muted-foreground">
           Sign up to get free welcome credits and enter a competition.
         </p>

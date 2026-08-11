@@ -25,7 +25,7 @@ export function OurStorySection() {
               {topic.subtitle}
             </p>
           )}
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">{topic.title}</h2>
+          <h2 className="font-heading text-3xl font-bold text-white sm:text-4xl">{topic.title}</h2>
           <div className="mx-auto mt-4 h-[3px] w-16 overflow-hidden rounded-full bg-white/10">
             <div className="h-full w-1/2 animate-pulse bg-primary" />
           </div>

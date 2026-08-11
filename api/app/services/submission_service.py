@@ -108,6 +108,35 @@ async def list_submissions_for_user(db: AsyncSession, user_id: uuid.UUID) -> lis
     return [(row[0], row[1], row[2]) for row in result.all()]
 
 
+async def list_gallery_submissions(
+    db: AsyncSession,
+    event_id: uuid.UUID | None = None,
+    media_type: MediaType | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+) -> list[tuple[Submission, str, uuid.UUID]]:
+    """Approved entries across every event, newest first — powers the public gallery.
+    Returns (submission, event_name, event_id) tuples, same shape as list_submissions_for_user."""
+    from app.models.event import Event
+
+    query = (
+        select(Submission, Event.name, Event.id)
+        .join(Participation, Participation.id == Submission.participation_id)
+        .join(Event, Event.id == Participation.event_id)
+        .join(User, User.id == Participation.user_id)
+        .where(Submission.status == SubmissionStatus.APPROVED, User.status == UserStatus.ACTIVE)
+    )
+    if event_id is not None:
+        query = query.where(Event.id == event_id)
+    if media_type is not None:
+        query = query.where(Submission.media_type == media_type)
+    query = query.order_by(Submission.uploaded_at.desc()).offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
+    result = await db.exec(query)
+    return [(row[0], row[1], row[2]) for row in result.all()]
+
+
 async def upload_submission(
     db: AsyncSession,
     background_tasks: BackgroundTasks,

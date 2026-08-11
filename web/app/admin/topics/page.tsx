@@ -13,11 +13,11 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
-import { EmptyState } from "@/components/admin/EmptyState";
-import { SearchX } from "lucide-react";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Plus, SearchX } from "lucide-react";
 
 const EMPTY_FORM: TopicPayload = {
   key: "",
@@ -95,16 +95,20 @@ export default function AdminTopicsPage() {
 
   return (
     <div className="space-y-8">
-      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Topics" }]} />
+      <div className="flex items-center justify-between gap-3">
+        <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Topics" }]} />
+        <Button size="sm" onClick={() => setFormOpen(true)}>
+          <Plus className="size-4" />
+          Add topic
+        </Button>
+      </div>
 
-      <CollapsibleFormCard
-        title={editingId ? "Edit topic" : "Create topic"}
-        triggerLabel="Add topic"
-        open={formOpen}
-        onOpenChange={(next) => (next ? setFormOpen(true) : resetForm())}
-      >
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+      <Sheet open={formOpen} onOpenChange={(next) => (next ? setFormOpen(true) : resetForm())}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{editingId ? "Edit topic" : "Create topic"}</SheetTitle>
+          </SheetHeader>
+          <SheetBody className="space-y-4">
             <div className="space-y-1.5">
               <Label>Key (used in URL /pages/key)</Label>
               <Input
@@ -140,37 +144,31 @@ export default function AdminTopicsPage() {
                 onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
               />
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <Label>Content</Label>
-            <RichTextEditor
-              value={form.htmlContent}
-              onChange={(html) => setForm((f) => ({ ...f, htmlContent: html }))}
-            />
-          </div>
+            <div className="space-y-1.5">
+              <Label>Content</Label>
+              <RichTextEditor
+                value={form.htmlContent}
+                onChange={(html) => setForm((f) => ({ ...f, htmlContent: html }))}
+              />
+            </div>
 
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={form.featured}
-              onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
-            />
-            Featured on home page (max 3 shown)
-          </label>
-
-          <div className="flex gap-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.featured}
+                onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
+              />
+              Featured on home page (max 3 shown)
+            </label>
+          </SheetBody>
+          <SheetFooter>
             <Button onClick={handleSubmit} disabled={isSaving || !form.key || !form.title}>
               {isSaving ? "Saving…" : editingId ? "Save changes" : "Create topic"}
             </Button>
-            {editingId && (
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>
-            )}
-          </div>
-        </div>
-      </CollapsibleFormCard>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Card className="shadow-md shadow-black/20">
         <CardHeader>

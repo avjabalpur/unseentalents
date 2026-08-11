@@ -8,7 +8,7 @@ from app.core.dependencies import CurrentUser, require_role
 from app.db import get_db
 from app.models.enums import UserRole
 from app.models.user import User
-from app.schemas.event import EventCreate, EventRead, EventUpdate
+from app.schemas.event import EventCreate, EventOverview, EventRead, EventUpdate
 from app.schemas.participation import ParticipationRead
 from app.schemas.stage import StageRead
 from app.services import event_service, participation_service, stage_service
@@ -75,6 +75,18 @@ async def delete_event(
 ):
     event = await event_service.get_event_or_404(db, event_id)
     await event_service.delete_event(db, event)
+
+
+@router.get("/{event_id}/overview", response_model=EventOverview)
+async def get_event_overview(
+    event_id: uuid.UUID,
+    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
+    db: AsyncSession = Depends(get_db),
+):
+    event = await event_service.get_event_or_404(db, event_id)
+    event_read = await _to_read(db, event)
+    stats = await event_service.get_event_overview_stats(db, event_id)
+    return EventOverview(event=event_read, **stats)
 
 
 @router.get("/admin/all", response_model=list[EventRead])

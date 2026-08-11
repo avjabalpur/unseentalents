@@ -1,0 +1,6 @@
+1. In the https://takadao.io/ there is greadient in the backgroud so that is looking good, can we do the same here
+2. We have Annoucement in top with action button like The LifeDAO is live — your path to collective financial freedom starts now.
+Check it, let's implement in our application too, admin can setup the Annoucement with start and end date, when user will click on this then it will redirect to onfigured page
+3. In the end user we are showing all the events in Menu, let's show only upcoming/ongoing event. after the name of event show the upcoming/going on in small letters, so user can understand that
+4. We have to give the way to end user to see the galary (all events, videos etc)
+5. let's rework on the end user desing to make that perfect, feel free to arrange all the layout.

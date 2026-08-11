@@ -58,9 +58,9 @@ export default async function HomePage() {
         >
           <div className="mx-auto max-w-[1600px] px-4 py-24 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-              Unseen Talents
+              SecretWhiz
             </p>
-            <h1 className="text-4xl font-bold tracking-tight text-balance text-white sm:text-6xl">
+            <h1 className="font-heading text-4xl font-bold tracking-tight text-balance text-white sm:text-6xl">
               Show your talent. <span className="text-primary">Get discovered.</span>
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-lg text-white/70 text-balance">
@@ -101,8 +101,8 @@ export default async function HomePage() {
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-primary">
             Live right now
           </p>
-          <h2 className="text-2xl font-semibold uppercase tracking-wide sm:text-3xl">
-            Unseen Talents <span className="text-primary">competitions</span>
+          <h2 className="font-heading text-2xl font-semibold uppercase tracking-wide sm:text-3xl">
+            SecretWhiz <span className="text-primary">competitions</span>
           </h2>
           <div className="mt-3 mb-8 h-[3px] w-16 overflow-hidden rounded-full bg-white/10">
             <div className="h-full w-1/2 animate-pulse bg-primary" />

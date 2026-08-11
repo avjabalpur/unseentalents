@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Plus, Trash2 } from "lucide-react";
 import { useAdminEvents, useArchiveEvent, useCreateEvent, useDeleteEvent, usePublishEvent } from "@/lib/hooks/useAdmin";
 import { useEventTypes } from "@/lib/hooks/useEventTypes";
 import { ApiError } from "@/lib/api-client";
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
 
@@ -61,38 +61,53 @@ export default function AdminEventsPage() {
 
   return (
     <div className="space-y-8">
-      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Events" }]} />
+      <div className="flex items-center justify-between gap-3">
+        <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Events" }]} />
+        <Button size="sm" onClick={() => setFormOpen(true)}>
+          <Plus className="size-4" />
+          Add event
+        </Button>
+      </div>
 
-      <CollapsibleFormCard title="Create event" triggerLabel="Add event" open={formOpen} onOpenChange={setFormOpen}>
-        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Event type</Label>
-            <Select value={eventTypeId} onValueChange={(v) => setEventTypeId(v ?? "")}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select event type" />
-              </SelectTrigger>
-              <SelectContent>
-                {eventTypes?.map((et) => (
-                  <SelectItem key={et.id} value={et.id}>
-                    {et.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Description</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
-          <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createEvent.isPending}>
-            {createEvent.isPending ? "Creating…" : "Create event"}
-          </Button>
-        </form>
-      </CollapsibleFormCard>
+      <Sheet open={formOpen} onOpenChange={setFormOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Create event</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            <form id="create-event-form" onSubmit={handleCreate} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Name</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Event type</Label>
+                <Select value={eventTypeId} onValueChange={(v) => setEventTypeId(v ?? "")}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eventTypes?.map((et) => (
+                      <SelectItem key={et.id} value={et.id}>
+                        {et.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Description</Label>
+                <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+              </div>
+            </form>
+          </SheetBody>
+          <SheetFooter>
+            <Button type="submit" form="create-event-form" disabled={createEvent.isPending}>
+              {createEvent.isPending ? "Creating…" : "Create event"}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Card className="shadow-md shadow-black/20">
         <CardHeader>
@@ -100,13 +115,14 @@ export default function AdminEventsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <TableSkeleton columns={6} />
+            <TableSkeleton columns={7} />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Overview</TableHead>
                   <TableHead>Stages</TableHead>
                   <TableHead>Prizes</TableHead>
                   <TableHead>Publish</TableHead>
@@ -121,6 +137,14 @@ export default function AdminEventsPage() {
                       <Badge variant={event.status === "PUBLISHED" ? "default" : "secondary"}>
                         {event.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/admin/events/${event.id}/overview`}
+                        className="inline-flex items-center rounded-full bg-primary/15 px-2.5 py-1 text-sm font-medium text-primary transition-colors hover:bg-primary/25"
+                      >
+                        Track event
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <Link

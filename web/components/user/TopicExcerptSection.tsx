@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTopic } from "@/lib/hooks/useTopics";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const EXCERPT_MAX_CHARS = 260;
 
@@ -19,7 +20,21 @@ function stripHtmlAndTruncate(html: string, maxChars: number = EXCERPT_MAX_CHARS
 /** Reusable "excerpt + See more" preview for any CMS Topic — used on the home
  * page so full topic content lives at /pages/[key], not duplicated inline. */
 export function TopicExcerptSection({ topicKey }: { topicKey: string }) {
-  const { data: topic } = useTopic(topicKey);
+  const { data: topic, isLoading } = useTopic(topicKey);
+
+  if (isLoading) {
+    return (
+      <section className="py-16">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-4">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="mt-2 h-4 w-full max-w-2xl" />
+          <Skeleton className="h-4 w-3/4 max-w-xl" />
+          <Skeleton className="mt-3 h-9 w-32 rounded-lg" />
+        </div>
+      </section>
+    );
+  }
 
   if (!topic) return null;
 
@@ -41,7 +56,7 @@ export function TopicExcerptSection({ topicKey }: { topicKey: string }) {
               {topic.subtitle}
             </p>
           )}
-          <h2 className="text-3xl font-bold text-white">{topic.title}</h2>
+          <h2 className="font-heading text-3xl font-bold text-white">{topic.title}</h2>
           <p className="mx-auto mt-4 max-w-3xl text-white/70">{excerpt}</p>
           <div className="mt-6">
             <Button

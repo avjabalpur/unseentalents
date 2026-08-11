@@ -43,7 +43,7 @@ function PrizesSection({ prizes }: { prizes: Prize[] }) {
 
   return (
     <FadeIn className="mb-10">
-      <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold uppercase tracking-wide">
+      <h2 className="font-heading mb-4 flex items-center gap-2 text-xl font-semibold uppercase tracking-wide">
         <Trophy className="size-5 text-primary" />
         Prizes <span className="text-primary">up for grabs</span>
       </h2>
@@ -130,7 +130,7 @@ export function EventDetailClient({ event, stages, prizes }: { event: Event; sta
                       <span className="text-sm uppercase tracking-widest text-primary">{eventType.name}</span>
                     )}
                   </div>
-                  <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{event.name}</h1>
+                  <h1 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">{event.name}</h1>
                   <p className="mt-2 max-w-3xl text-white/70">{event.description}</p>
                 </div>
                 {!participation && (
@@ -184,7 +184,7 @@ export function EventDetailClient({ event, stages, prizes }: { event: Event; sta
         )}
 
         <FadeIn>
-          <h2 className="mb-4 text-xl font-semibold uppercase tracking-wide">
+          <h2 className="font-heading mb-4 text-xl font-semibold uppercase tracking-wide">
             {activeStage ? (
               <>
                 {activeStage.name.replace("_", " ")} <span className="text-primary">entries</span>

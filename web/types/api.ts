@@ -77,6 +77,47 @@ export interface Stage {
   advanceCount: number | null;
 }
 
+export interface StageStats {
+  stageId: string;
+  name: StageName;
+  orderIndex: number;
+  startAt: string;
+  endAt: string;
+  closedAt: string | null;
+  isCurrent: boolean;
+  submissionCount: number;
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+  advancedCount: number;
+  participantsAtStage: number;
+}
+
+export interface EventOverview {
+  event: Event;
+  stages: StageStats[];
+  totalParticipants: number;
+  activeParticipants: number;
+  eliminatedParticipants: number;
+  winnerCount: number;
+  totalSubmissions: number;
+  totalPending: number;
+  totalApproved: number;
+  totalRejected: number;
+}
+
+export interface Announcement {
+  id: string;
+  message: string;
+  buttonLabel: string | null;
+  linkUrl: string | null;
+  startAt: string | null;
+  endAt: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Prize {
   id: string;
   eventId: string;

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Roboto, Geist_Mono } from "next/font/google";
+import { Roboto, Anton, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "plyr-react/plyr.css";
 import { QueryProvider } from "@/lib/query-provider";
@@ -12,13 +12,19 @@ const roboto = Roboto({
   weight: ["300", "400", "500", "700", "900"],
 });
 
+const anton = Anton({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: "400",
+});
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Unseen Talents — Show your talent. Get discovered.",
+  title: "SecretWhiz — Show your talent. Get discovered.",
   description: "Enter talent competitions, upload your performance, and win with public votes.",
 };
 
@@ -28,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${roboto.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${roboto.variable} ${anton.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <QueryProvider>
           <AuthProvider>

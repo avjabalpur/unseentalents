@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { useAdminSlides, useCreateSlide, useUpdateSlide } from "@/lib/hooks/useAdmin";
 import { ApiError, mediaUrl } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,22 +11,19 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
-import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
 
-export default function AdminSlidesPage() {
-  const { data: slides, isLoading } = useAdminSlides();
-  const createSlide = useCreateSlide();
-  const updateSlide = useUpdateSlide();
-
-  const [formOpen, setFormOpen] = useState(false);
+function CreateSlideSheet() {
+  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [orderIndex, setOrderIndex] = useState(0);
   const [image, setImage] = useState<File | null>(null);
   const [mobileImage, setMobileImage] = useState<File | null>(null);
+  const createSlide = useCreateSlide();
 
   const handleCreate = (e: FormEvent) => {
     e.preventDefault();
@@ -44,7 +42,7 @@ export default function AdminSlidesPage() {
           setImage(null);
           setMobileImage(null);
           setOrderIndex((n) => n + 1);
-          setFormOpen(false);
+          setOpen(false);
         },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create slide."),
       },
@@ -52,40 +50,63 @@ export default function AdminSlidesPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Hero Slider" }]} />
-
-      <CollapsibleFormCard title="Add slide" triggerLabel="Add slide" open={formOpen} onOpenChange={setFormOpen}>
-        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Title (optional)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Subtitle (optional)</Label>
-            <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Link URL (optional)</Label>
-            <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="/events/..." />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Order</Label>
-            <Input type="number" value={orderIndex} onChange={(e) => setOrderIndex(Number(e.target.value))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Desktop image</Label>
-            <Input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Mobile image (optional)</Label>
-            <Input type="file" accept="image/*" onChange={(e) => setMobileImage(e.target.files?.[0] ?? null)} />
-          </div>
-          <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createSlide.isPending}>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger render={<Button size="sm" />}>
+        <Plus className="size-4" />
+        Add slide
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Add slide</SheetTitle>
+        </SheetHeader>
+        <SheetBody>
+          <form id="create-slide-form" onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Title (optional)</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Subtitle (optional)</Label>
+              <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Link URL (optional)</Label>
+              <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="/events/..." />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Order</Label>
+              <Input type="number" value={orderIndex} onChange={(e) => setOrderIndex(Number(e.target.value))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Desktop image</Label>
+              <Input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Mobile image (optional)</Label>
+              <Input type="file" accept="image/*" onChange={(e) => setMobileImage(e.target.files?.[0] ?? null)} />
+            </div>
+          </form>
+        </SheetBody>
+        <SheetFooter>
+          <Button type="submit" form="create-slide-form" disabled={createSlide.isPending}>
             {createSlide.isPending ? "Uploading…" : "Add slide"}
           </Button>
-        </form>
-      </CollapsibleFormCard>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export default function AdminSlidesPage() {
+  const { data: slides, isLoading } = useAdminSlides();
+  const updateSlide = useUpdateSlide();
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between gap-3">
+        <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Hero Slider" }]} />
+        <CreateSlideSheet />
+      </div>
 
       <Card className="shadow-md shadow-black/20">
         <CardHeader>

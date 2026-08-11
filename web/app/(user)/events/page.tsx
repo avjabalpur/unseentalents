@@ -28,7 +28,7 @@ export default async function AllEventsPage() {
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-12">
       <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-primary">Every competition</p>
-      <h1 className="text-2xl font-semibold uppercase tracking-wide sm:text-3xl">
+      <h1 className="font-heading text-2xl font-semibold uppercase tracking-wide sm:text-3xl">
         All <span className="text-primary">events</span>
       </h1>
       <div className="mt-3 mb-8 h-[3px] w-16 overflow-hidden rounded-full bg-white/10">

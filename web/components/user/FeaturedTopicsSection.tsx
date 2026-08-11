@@ -21,13 +21,20 @@ export function FeaturedTopicsSection() {
   const cols = shown.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
 
   return (
-    <section className="bg-black py-16">
-      <div className="mx-auto max-w-[1600px] px-4">
+    <section className="relative overflow-hidden bg-black py-16">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 60% 60% at 50% 100%, rgba(var(--brand-rgb),0.14), transparent)",
+        }}
+      />
+      <div className="relative mx-auto max-w-[1600px] px-4">
         <FadeIn>
           <p className="mb-3 text-center text-sm font-semibold uppercase tracking-[0.3em] text-primary">
             Get involved
           </p>
-          <h2 className="mb-10 text-center text-2xl font-semibold uppercase tracking-wide sm:text-3xl">
+          <h2 className="font-heading mb-10 text-center text-2xl font-semibold uppercase tracking-wide sm:text-3xl">
             Wherever you fit <span className="text-primary">in the story</span>
           </h2>
         </FadeIn>

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { useAdminCoupons, useCreateCoupon, useUpdateCoupon } from "@/lib/hooks/useAdmin";
 import { ApiError } from "@/lib/api-client";
 import { formatDate } from "@/lib/format";
@@ -15,9 +15,78 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
+
+function CreateCouponSheet() {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [creditValue, setCreditValue] = useState(5);
+  const [maxRedemptions, setMaxRedemptions] = useState(100);
+  const createCoupon = useCreateCoupon();
+
+  const handleCreate = (e: FormEvent) => {
+    e.preventDefault();
+    createCoupon.mutate(
+      { code: code.toUpperCase(), creditValue, maxRedemptions },
+      {
+        onSuccess: () => {
+          toast.success("Coupon created.");
+          setCode("");
+          setCreditValue(5);
+          setMaxRedemptions(100);
+          setOpen(false);
+        },
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create coupon."),
+      },
+    );
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger render={<Button size="sm" />}>
+        <Plus className="size-4" />
+        Add coupon
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Create coupon</SheetTitle>
+        </SheetHeader>
+        <SheetBody>
+          <form id="create-coupon-form" onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Code</Label>
+              <Input value={code} onChange={(e) => setCode(e.target.value)} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Credit value</Label>
+              <Input
+                type="number"
+                min={1}
+                value={creditValue}
+                onChange={(e) => setCreditValue(Number(e.target.value))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Max redemptions</Label>
+              <Input
+                type="number"
+                min={1}
+                value={maxRedemptions}
+                onChange={(e) => setMaxRedemptions(Number(e.target.value))}
+              />
+            </div>
+          </form>
+        </SheetBody>
+        <SheetFooter>
+          <Button type="submit" form="create-coupon-form" disabled={createCoupon.isPending}>
+            {createCoupon.isPending ? "Creating…" : "Create coupon"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 function EditCouponSheet({ coupon }: { coupon: Coupon }) {
   const [open, setOpen] = useState(false);
@@ -99,66 +168,13 @@ function EditCouponSheet({ coupon }: { coupon: Coupon }) {
 
 export default function AdminCouponsPage() {
   const { data: coupons, isLoading } = useAdminCoupons();
-  const createCoupon = useCreateCoupon();
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [code, setCode] = useState("");
-  const [creditValue, setCreditValue] = useState(5);
-  const [maxRedemptions, setMaxRedemptions] = useState(100);
-
-  const handleCreate = (e: FormEvent) => {
-    e.preventDefault();
-    createCoupon.mutate(
-      { code: code.toUpperCase(), creditValue, maxRedemptions },
-      {
-        onSuccess: () => {
-          toast.success("Coupon created.");
-          setCode("");
-          setFormOpen(false);
-        },
-        onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create coupon."),
-      },
-    );
-  };
 
   return (
     <div className="space-y-8">
-      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Coupons" }]} />
-
-      <CollapsibleFormCard
-        title="Create coupon"
-        triggerLabel="Add coupon"
-        open={formOpen}
-        onOpenChange={setFormOpen}
-      >
-        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label>Code</Label>
-            <Input value={code} onChange={(e) => setCode(e.target.value)} required />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Credit value</Label>
-            <Input
-              type="number"
-              min={1}
-              value={creditValue}
-              onChange={(e) => setCreditValue(Number(e.target.value))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Max redemptions</Label>
-            <Input
-              type="number"
-              min={1}
-              value={maxRedemptions}
-              onChange={(e) => setMaxRedemptions(Number(e.target.value))}
-            />
-          </div>
-          <Button type="submit" className="sm:col-span-3 sm:w-fit" disabled={createCoupon.isPending}>
-            {createCoupon.isPending ? "Creating…" : "Create coupon"}
-          </Button>
-        </form>
-      </CollapsibleFormCard>
+      <div className="flex items-center justify-between gap-3">
+        <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Coupons" }]} />
+        <CreateCouponSheet />
+      </div>
 
       <Card className="shadow-md shadow-black/20">
         <CardHeader>

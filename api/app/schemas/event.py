@@ -3,7 +3,7 @@ from datetime import datetime
 
 from app.models.enums import EventStatus
 from app.schemas.base import CamelModel
-from app.schemas.stage import StageRead
+from app.schemas.stage import StageRead, StageStats
 
 
 class EventCreate(CamelModel):
@@ -30,3 +30,16 @@ class EventRead(CamelModel):
     first_stage_start_at: datetime | None = None
     final_stage_end_at: datetime | None = None
     stages: list[StageRead] = []
+
+
+class EventOverview(CamelModel):
+    event: EventRead
+    stages: list[StageStats]
+    total_participants: int
+    active_participants: int
+    eliminated_participants: int
+    winner_count: int
+    total_submissions: int
+    total_pending: int
+    total_approved: int
+    total_rejected: int

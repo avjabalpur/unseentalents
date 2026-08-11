@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { useEvent, useEventStages } from "@/lib/hooks/useEvents";
 import { useEventTypes } from "@/lib/hooks/useEventTypes";
 import { useCreateStage, useCloseStage, useStageResults, useAdvanceStage } from "@/lib/hooks/useAdmin";
@@ -17,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
 const STAGE_NAMES: StageName[] = [
@@ -79,14 +80,20 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
   return (
     <div className="space-y-8">
       <div>
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/admin" },
-            { label: "Events", href: "/admin/events" },
-            { label: event?.name ?? "Event" },
-            { label: "Stages" },
-          ]}
-        />
+        <div className="flex items-center justify-between gap-3">
+          <Breadcrumb
+            items={[
+              { label: "Dashboard", href: "/admin" },
+              { label: "Events", href: "/admin/events" },
+              { label: event?.name ?? "Event" },
+              { label: "Stages" },
+            ]}
+          />
+          <Button size="sm" onClick={() => setFormOpen(true)}>
+            <Plus className="size-4" />
+            Add stage
+          </Button>
+        </div>
         {event ? (
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-lg font-medium text-foreground">{event.name}</p>
@@ -99,63 +106,72 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
         {event?.description && <p className="mt-1 text-sm text-muted-foreground">{event.description}</p>}
       </div>
 
-      <CollapsibleFormCard title="Add stage" triggerLabel="Add stage" open={formOpen} onOpenChange={setFormOpen}>
-        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Stage</Label>
-            <Select value={name} onValueChange={(v) => v && setName(v as StageName)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STAGE_NAMES.map((n) => (
-                  <SelectItem key={n} value={n}>
-                    {n.replace("_", " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Order</Label>
-            <Input type="number" min={1} value={orderIndex} onChange={(e) => setOrderIndex(Number(e.target.value))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Start</Label>
-            <Input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>End</Label>
-            <Input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Advancement rule</Label>
-            <Select value={advanceMode} onValueChange={(v) => v && setAdvanceMode(v as AdvanceMode)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ADMIN_CURATED">Admin curated</SelectItem>
-                <SelectItem value="AUTO_TOP_N">Auto top N</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {advanceMode === "AUTO_TOP_N" && (
-            <div className="space-y-1.5">
-              <Label>Advance top N</Label>
-              <Input
-                type="number"
-                min={1}
-                value={advanceCount}
-                onChange={(e) => setAdvanceCount(Number(e.target.value))}
-              />
-            </div>
-          )}
-          <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createStage.isPending}>
-            {createStage.isPending ? "Creating…" : "Add stage"}
-          </Button>
-        </form>
-      </CollapsibleFormCard>
+      <Sheet open={formOpen} onOpenChange={setFormOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Add stage</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            <form id="create-stage-form" onSubmit={handleCreate} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Stage</Label>
+                <Select value={name} onValueChange={(v) => v && setName(v as StageName)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STAGE_NAMES.map((n) => (
+                      <SelectItem key={n} value={n}>
+                        {n.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Order</Label>
+                <Input type="number" min={1} value={orderIndex} onChange={(e) => setOrderIndex(Number(e.target.value))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Start</Label>
+                <Input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>End</Label>
+                <Input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Advancement rule</Label>
+                <Select value={advanceMode} onValueChange={(v) => v && setAdvanceMode(v as AdvanceMode)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ADMIN_CURATED">Admin curated</SelectItem>
+                    <SelectItem value="AUTO_TOP_N">Auto top N</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {advanceMode === "AUTO_TOP_N" && (
+                <div className="space-y-1.5">
+                  <Label>Advance top N</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={advanceCount}
+                    onChange={(e) => setAdvanceCount(Number(e.target.value))}
+                  />
+                </div>
+              )}
+            </form>
+          </SheetBody>
+          <SheetFooter>
+            <Button type="submit" form="create-stage-form" disabled={createStage.isPending}>
+              {createStage.isPending ? "Creating…" : "Add stage"}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Card className="shadow-md shadow-black/20">
         <CardHeader>

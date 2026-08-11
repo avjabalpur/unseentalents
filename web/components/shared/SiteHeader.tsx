@@ -9,6 +9,7 @@ import { Brand } from "@/components/shared/Brand";
 import { CreditBalanceBadge } from "@/components/shared/CreditBalanceBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventsNavDropdown } from "@/components/shared/EventsNavDropdown";
+import { MobileNav } from "@/components/shared/MobileNav";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,9 @@ export function SiteHeader() {
             Home
           </Link>
           <EventsNavDropdown />
+          <Link href="/gallery" className={navLinkClass}>
+            Gallery
+          </Link>
           <Link href="/pages/whats-new" className={navLinkClass}>
             What&apos;s New
           </Link>
@@ -52,13 +56,13 @@ export function SiteHeader() {
           {isLoading ? (
             <>
               <Skeleton className="h-8 w-20 rounded-lg" />
-              <Skeleton className="h-8 w-24 rounded-lg" />
+              <Skeleton className="hidden h-8 w-24 rounded-lg md:block" />
             </>
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button variant="ghost" size="sm" className="gap-1.5 uppercase tracking-wide">
+                  <Button variant="ghost" size="sm" className="hidden gap-1.5 uppercase tracking-wide md:flex">
                     <span className="max-w-28 truncate">{user.name}</span>
                     <ChevronDown className="size-3.5" />
                   </Button>
@@ -101,7 +105,7 @@ export function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <>
+            <div className="hidden items-center gap-2 sm:gap-3 md:flex">
               <Button
                 variant="ghost"
                 size="sm"
@@ -115,8 +119,9 @@ export function SiteHeader() {
                 nativeButton={false}
                 render={<Link href="/register">Register now</Link>}
               />
-            </>
+            </div>
           )}
+          <MobileNav />
         </div>
       </div>
     </header>

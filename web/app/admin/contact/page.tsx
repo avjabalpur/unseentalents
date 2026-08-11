@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListCardSkeleton } from "@/components/admin/CardGridSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Mail as MailIcon } from "lucide-react";
 
 function formatDateTime(iso: string): string {

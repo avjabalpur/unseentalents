@@ -7,7 +7,7 @@ from app.core.dependencies import CurrentUser, require_role
 from app.core.errors import AppError
 from app.core.rate_limit import rate_limiter
 from app.db import get_db
-from app.models.enums import UserRole, UserStatus
+from app.models.enums import MediaType, UserRole, UserStatus
 from app.models.submission import Submission
 from app.models.user import User
 from app.schemas.submission import BulkModerateRequest, SubmissionRead
@@ -34,6 +34,26 @@ async def _to_read(db: AsyncSession, submission: Submission) -> SubmissionRead:
         data.owner_name = owner.name
         data.owner_username = owner.username
     return data
+
+
+@router.get("/submissions", response_model=list[SubmissionRead])
+async def list_gallery_submissions(
+    event_id: uuid.UUID | None = Query(None),
+    media_type: MediaType | None = Query(None),
+    limit: int | None = Query(None, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = await submission_service.list_gallery_submissions(
+        db, event_id=event_id, media_type=media_type, limit=limit, offset=offset
+    )
+    reads = []
+    for submission, event_name, ev_id in rows:
+        data = await _to_read(db, submission)
+        data.event_name = event_name
+        data.event_id = ev_id
+        reads.append(data)
+    return reads
 
 
 @router.get("/stages/{stage_id}/submissions", response_model=list[SubmissionRead])

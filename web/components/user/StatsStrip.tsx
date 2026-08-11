@@ -60,8 +60,15 @@ export function StatsStrip({ summary }: { summary: PublicSummary }) {
   }, []);
 
   return (
-    <section ref={ref} className="border-y border-white/10 bg-black py-12">
-      <div className="mx-auto grid max-w-[1600px] grid-cols-2 gap-8 px-4 sm:grid-cols-4">
+    <section ref={ref} className="relative overflow-hidden border-y border-white/10 bg-black py-12">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 55% 70% at 10% 50%, rgba(var(--brand-rgb),0.14), transparent), radial-gradient(ellipse 55% 70% at 90% 50%, rgba(var(--brand-rgb),0.1), transparent)",
+        }}
+      />
+      <div className="relative mx-auto grid max-w-[1600px] grid-cols-2 gap-8 px-4 sm:grid-cols-4">
         <StatItem icon={Tags} label="Categories" value={summary.categoriesCount} start={visible} />
         <StatItem icon={Layers} label="Live Competitions" value={summary.eventsCount} start={visible} />
         <StatItem icon={Video} label="Entries Submitted" value={summary.submissionsCount} start={visible} />

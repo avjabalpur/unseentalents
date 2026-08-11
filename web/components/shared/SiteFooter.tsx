@@ -41,7 +41,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-white">
+            <h3 className="font-heading text-sm font-semibold uppercase tracking-widest text-white">
               Quick Links
             </h3>
             <ul className="mt-4 space-y-2">
@@ -56,7 +56,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-white">Explore</h3>
+            <h3 className="font-heading text-sm font-semibold uppercase tracking-widest text-white">Explore</h3>
             <ul className="mt-4 space-y-2">
               {EXPLORE_LINKS.map((link) => (
                 <li key={link.href}>
@@ -69,7 +69,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-white">Connect</h3>
+            <h3 className="font-heading text-sm font-semibold uppercase tracking-widest text-white">Connect</h3>
             <div className="mt-4 flex gap-3">
               {SOCIALS.map((social) => (
                 <a
@@ -88,7 +88,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row">
-          <p>© {new Date().getFullYear()} Unseen Talents. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} SecretWhiz. All rights reserved.</p>
           <p>Show your talent. Get discovered.</p>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useEventTypes } from "@/lib/hooks/useEventTypes";
 import { useCreateEventType, useDeleteEventType, useUpdateEventType, useUploadEventTypeImage } from "@/lib/hooks/useAdmin";
 import { ApiError, mediaUrl } from "@/lib/api-client";
@@ -14,9 +14,76 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { CollapsibleFormCard } from "@/components/admin/CollapsibleFormCard";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
+
+function CreateEventTypeSheet() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [mediaType, setMediaType] = useState<MediaType>("VIDEO");
+  const createEventType = useCreateEventType();
+
+  const handleCreate = (e: FormEvent) => {
+    e.preventDefault();
+    createEventType.mutate(
+      { name, description, submissionMediaType: mediaType },
+      {
+        onSuccess: () => {
+          toast.success("Event type created.");
+          setName("");
+          setDescription("");
+          setMediaType("VIDEO");
+          setOpen(false);
+        },
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create event type."),
+      },
+    );
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger render={<Button size="sm" />}>
+        <Plus className="size-4" />
+        Add event type
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Create event type</SheetTitle>
+        </SheetHeader>
+        <SheetBody>
+          <form id="create-event-type-form" onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Name</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Submission type</Label>
+              <Select value={mediaType} onValueChange={(v) => v && setMediaType(v as MediaType)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VIDEO">Video</SelectItem>
+                  <SelectItem value="IMAGE">Image</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+          </form>
+        </SheetBody>
+        <SheetFooter>
+          <Button type="submit" form="create-event-type-form" disabled={createEventType.isPending || !name.trim()}>
+            {createEventType.isPending ? "Creating…" : "Create event type"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 function EditEventTypeSheet({ eventType }: { eventType: EventType }) {
   const [open, setOpen] = useState(false);
@@ -81,30 +148,8 @@ function EditEventTypeSheet({ eventType }: { eventType: EventType }) {
 
 export default function AdminEventTypesPage() {
   const { data: eventTypes, isLoading } = useEventTypes();
-  const createEventType = useCreateEventType();
   const uploadImage = useUploadEventTypeImage();
   const deleteEventType = useDeleteEventType();
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [mediaType, setMediaType] = useState<MediaType>("VIDEO");
-
-  const handleCreate = (e: FormEvent) => {
-    e.preventDefault();
-    createEventType.mutate(
-      { name, description, submissionMediaType: mediaType },
-      {
-        onSuccess: () => {
-          toast.success("Event type created.");
-          setName("");
-          setDescription("");
-          setFormOpen(false);
-        },
-        onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create event type."),
-      },
-    );
-  };
 
   const handleImageChange = (eventTypeId: string, file: File | null) => {
     if (!file) return;
@@ -119,40 +164,10 @@ export default function AdminEventTypesPage() {
 
   return (
     <div className="space-y-8">
-      <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Event Types" }]} />
-
-      <CollapsibleFormCard
-        title="Create event type"
-        triggerLabel="Add event type"
-        open={formOpen}
-        onOpenChange={setFormOpen}
-      >
-        <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Submission type</Label>
-            <Select value={mediaType} onValueChange={(v) => v && setMediaType(v as MediaType)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="VIDEO">Video</SelectItem>
-                <SelectItem value="IMAGE">Image</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Description</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
-          <Button type="submit" className="sm:col-span-2 sm:w-fit" disabled={createEventType.isPending}>
-            {createEventType.isPending ? "Creating…" : "Create event type"}
-          </Button>
-        </form>
-      </CollapsibleFormCard>
+      <div className="flex items-center justify-between gap-3">
+        <Breadcrumb items={[{ label: "Dashboard", href: "/admin" }, { label: "Event Types" }]} />
+        <CreateEventTypeSheet />
+      </div>
 
       <Card className="shadow-md shadow-black/20">
         <CardHeader>

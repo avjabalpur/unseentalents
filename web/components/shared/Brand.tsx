@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 export function Brand({ className }: { className?: string }) {
   return (
-    <span className={cn("text-2xl font-extrabold tracking-tight text-foreground", className)}>
+    <span className={cn("font-heading text-2xl tracking-tight text-foreground", className)}>
       Secret<span className="text-primary">Whiz</span>
     </span>
   );

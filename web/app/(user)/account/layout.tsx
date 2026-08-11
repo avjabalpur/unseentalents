@@ -45,7 +45,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-10">
       <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-primary">Welcome back</p>
-      <h1 className="mb-8 text-2xl font-semibold uppercase tracking-wide sm:text-3xl">{user.name}</h1>
+      <h1 className="font-heading mb-8 text-2xl font-semibold uppercase tracking-wide sm:text-3xl">{user.name}</h1>
       <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
         <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
           {NAV.map((item) => {
