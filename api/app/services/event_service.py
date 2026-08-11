@@ -14,8 +14,8 @@ from app.models.stage import Stage
 from app.models.stage_result import StageResult
 from app.models.submission import Submission
 from app.models.user import User
-from app.schemas.event import EventCreate, EventUpdate
-from app.schemas.stage import StageStats
+from app.schemas.event import EventCreate, EventRead, EventUpdate
+from app.schemas.stage import StageRead, StageStats
 from app.services import stage_service
 
 
@@ -44,6 +44,23 @@ async def list_all_events(db: AsyncSession, limit: int | None = None, offset: in
         query = query.limit(limit)
     result = await db.exec(query)
     return list(result.all())
+
+
+async def to_read(db: AsyncSession, event: Event) -> EventRead:
+    stages = await stage_service.list_stages_for_event(db, event.id)
+    data = EventRead.model_validate(event)
+    data.computed_status = compute_event_status(stages)
+
+    if stages:
+        ordered = sorted(stages, key=lambda s: s.order_index)
+        data.first_stage_start_at = ordered[0].start_at
+        data.final_stage_end_at = ordered[-1].end_at
+        now = datetime.now(timezone.utc)
+        current = next((s for s in ordered if s.start_at <= now <= s.end_at), None)
+        data.current_stage_name = current.name.value if current else None
+        data.stages = [StageRead.model_validate(s) for s in ordered]
+
+    return data
 
 
 async def get_event_or_404(db: AsyncSession, event_id: uuid.UUID) -> Event:

@@ -5,6 +5,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.dependencies import Pagination
 from app.models.activity_log import ActivityLog
+from app.models.user import User
+from app.schemas.activity_log import ActivityLogRead
 
 
 def record(
@@ -51,3 +53,13 @@ async def list_all(
     query = query.order_by(ActivityLog.created_at.desc()).limit(pagination.limit).offset(pagination.offset)
     result = await db.exec(query)
     return list(result.all())
+
+
+async def to_read(db: AsyncSession, log: ActivityLog) -> ActivityLogRead:
+    data = ActivityLogRead.model_validate(log)
+    if log.actor_id is not None:
+        actor = await db.get(User, log.actor_id)
+        if actor is not None:
+            data.actor_name = actor.name
+            data.actor_username = actor.username
+    return data

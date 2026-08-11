@@ -10,7 +10,7 @@ from app.core.errors import AppError
 from app.models.enums import ReportStatus
 from app.models.report import Report
 from app.models.user import User
-from app.schemas.report import ReportCreate
+from app.schemas.report import ReportCreate, ReportRead
 from app.services import activity_log_service
 
 
@@ -35,6 +35,15 @@ async def create_report(db: AsyncSession, data: ReportCreate, reporter: User) ->
     await db.commit()
     await db.refresh(report)
     return report
+
+
+async def to_read(db: AsyncSession, report: Report) -> ReportRead:
+    data = ReportRead.model_validate(report)
+    reporter = await db.get(User, report.reporter_id)
+    if reporter is not None:
+        data.reporter_name = reporter.name
+        data.reporter_username = reporter.username
+    return data
 
 
 async def list_reports(db: AsyncSession, pagination: Pagination, status_filter: ReportStatus | None = None) -> list[Report]:

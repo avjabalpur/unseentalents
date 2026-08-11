@@ -16,15 +16,6 @@ router = APIRouter(tags=["reports"])
 _report_rate_limit = rate_limiter("report", limit=10, window_seconds=60)
 
 
-async def _to_read(db: AsyncSession, report) -> ReportRead:
-    data = ReportRead.model_validate(report)
-    reporter = await db.get(User, report.reporter_id)
-    if reporter is not None:
-        data.reporter_name = reporter.name
-        data.reporter_username = reporter.username
-    return data
-
-
 @router.post("/reports", response_model=ReportRead)
 async def create_report(
     payload: ReportCreate,
@@ -33,7 +24,7 @@ async def create_report(
     _rate_limit: None = Depends(_report_rate_limit),
 ):
     report = await report_service.create_report(db, payload, current_user)
-    return await _to_read(db, report)
+    return await report_service.to_read(db, report)
 
 
 @router.get("/admin/reports", response_model=list[ReportRead])
@@ -44,7 +35,7 @@ async def list_admin_reports(
     db: AsyncSession = Depends(get_db),
 ):
     reports = await report_service.list_reports(db, pagination, status_filter=status)
-    return [await _to_read(db, r) for r in reports]
+    return [await report_service.to_read(db, r) for r in reports]
 
 
 @router.patch("/admin/reports/{report_id}", response_model=ReportRead)
@@ -56,4 +47,4 @@ async def resolve_report(
 ):
     report = await report_service.get_report_or_404(db, report_id)
     updated = await report_service.resolve_report(db, report, payload.status, admin)
-    return await _to_read(db, updated)
+    return await report_service.to_read(db, updated)

@@ -63,9 +63,7 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
         raise AppError("UNAUTHENTICATED", "Invalid token type.", status.HTTP_401_UNAUTHORIZED)
 
     user_id = uuid.UUID(payload["sub"])
-    user = await db.get(User, user_id)
-    if user is None:
-        raise AppError("UNAUTHENTICATED", "User not found.", status.HTTP_401_UNAUTHORIZED)
+    user = await auth_service.get_user_or_401(db, user_id)
     if user.status != UserStatus.ACTIVE:
         response.delete_cookie(REFRESH_COOKIE_NAME, path=f"{settings.api_prefix}/auth")
         raise AppError("ACCOUNT_SUSPENDED", "Your account has been suspended.", status.HTTP_403_FORBIDDEN)

@@ -1,6 +1,7 @@
 import uuid
+from pathlib import Path
 
-from fastapi import status
+from fastapi import UploadFile, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -8,6 +9,7 @@ from app.core.errors import AppError
 from app.models.event import Event
 from app.models.event_type import EventType
 from app.schemas.event_type import EventTypeCreate, EventTypeUpdate
+from app.storage.local import get_storage_backend
 
 
 async def list_event_types(db: AsyncSession) -> list[EventType]:
@@ -40,6 +42,14 @@ async def set_event_type_image(db: AsyncSession, event_type: EventType, image_ke
     await db.commit()
     await db.refresh(event_type)
     return event_type
+
+
+async def upload_image(db: AsyncSession, event_type: EventType, file: UploadFile) -> EventType:
+    storage = get_storage_backend()
+    extension = Path(file.filename or "").suffix.lower() or ".jpg"
+    key = f"event-type-images/{event_type.id}{extension}"
+    await storage.save(file, key)
+    return await set_event_type_image(db, event_type, key)
 
 
 async def update_event_type(db: AsyncSession, event_type: EventType, data: EventTypeUpdate) -> EventType:

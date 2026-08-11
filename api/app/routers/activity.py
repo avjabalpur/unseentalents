@@ -6,23 +6,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.dependencies import Pagination, require_role
 from app.core.errors import AppError
 from app.db import get_db
-from app.models.activity_log import ActivityLog
 from app.models.enums import UserRole, UserStatus
 from app.models.user import User
 from app.schemas.activity_log import ActivityLogRead
 from app.services import activity_log_service, submission_service
 
 router = APIRouter(tags=["activity"])
-
-
-async def _to_read(db: AsyncSession, log: ActivityLog) -> ActivityLogRead:
-    data = ActivityLogRead.model_validate(log)
-    if log.actor_id is not None:
-        actor = await db.get(User, log.actor_id)
-        if actor is not None:
-            data.actor_name = actor.name
-            data.actor_username = actor.username
-    return data
 
 
 @router.get("/submissions/{submission_id}/history", response_model=list[ActivityLogRead])
@@ -32,7 +21,7 @@ async def get_submission_history(submission_id: uuid.UUID, db: AsyncSession = De
     if owner is None or owner.status != UserStatus.ACTIVE:
         raise AppError("NOT_FOUND", "Submission not found.", status.HTTP_404_NOT_FOUND)
     logs = await activity_log_service.list_for_entity(db, "SUBMISSION", submission_id)
-    return [await _to_read(db, log) for log in logs]
+    return [await activity_log_service.to_read(db, log) for log in logs]
 
 
 @router.get("/admin/users/{user_id}/history", response_model=list[ActivityLogRead])
@@ -42,7 +31,7 @@ async def get_user_history(
     db: AsyncSession = Depends(get_db),
 ):
     logs = await activity_log_service.list_for_entity(db, "USER", user_id)
-    return [await _to_read(db, log) for log in logs]
+    return [await activity_log_service.to_read(db, log) for log in logs]
 
 
 @router.get("/admin/activity", response_model=list[ActivityLogRead])
@@ -54,4 +43,4 @@ async def list_admin_activity(
     db: AsyncSession = Depends(get_db),
 ):
     logs = await activity_log_service.list_all(db, pagination, entity_type=entity_type, actor_id=actor_id)
-    return [await _to_read(db, log) for log in logs]
+    return [await activity_log_service.to_read(db, log) for log in logs]

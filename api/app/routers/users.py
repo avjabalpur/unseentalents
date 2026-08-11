@@ -1,22 +1,16 @@
 import uuid
-from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile, status
-from sqlmodel import select
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.dependencies import CurrentUser, require_role
-from app.core.errors import AppError
 from app.db import get_db
-from app.models.credit_transaction import CreditTransaction
-from app.models.enums import CreditTransactionType, UserRole, UserStatus
+from app.models.enums import UserRole
 from app.models.user import User
 from app.schemas.credit import AdminGrantCreditRequest, CreditTransactionRead
 from app.schemas.submission import SubmissionRead
 from app.schemas.user import BulkUserStatusUpdate, UserRead, UserRoleUpdate, UserStatusUpdate, UserUpdate
-from app.services import activity_log_service, submission_service
-from app.services.credit_service import grant_credit
-from app.storage.local import get_storage_backend
+from app.services import credit_service, submission_service, user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -28,24 +22,13 @@ async def list_users(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(User).order_by(User.created_at.desc()).offset(offset)
-    if limit is not None:
-        query = query.limit(limit)
-    result = await db.exec(query)
-    return list(result.all())
+    return await user_service.list_users(db, limit=limit, offset=offset)
 
 
 @router.patch("/me", response_model=UserRead)
 async def update_me(payload: UserUpdate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
     updates = payload.model_dump(exclude_unset=True, by_alias=False)
-    if not updates:
-        return current_user
-    for field, value in updates.items():
-        setattr(current_user, field, value)
-    db.add(current_user)
-    await db.commit()
-    await db.refresh(current_user)
-    return current_user
+    return await user_service.update_profile(db, current_user, updates)
 
 
 @router.post("/me/avatar", response_model=UserRead)
@@ -54,15 +37,7 @@ async def upload_my_avatar(
     db: AsyncSession = Depends(get_db),
     file: UploadFile = File(...),
 ):
-    storage = get_storage_backend()
-    extension = Path(file.filename or "").suffix.lower() or ".jpg"
-    key = f"avatars/{current_user.id}{extension}"
-    await storage.save(file, key)
-    current_user.avatar_key = key
-    db.add(current_user)
-    await db.commit()
-    await db.refresh(current_user)
-    return current_user
+    return await user_service.update_avatar(db, current_user, file)
 
 
 @router.patch("/{user_id}/status", response_model=UserRead)
@@ -72,25 +47,7 @@ async def update_user_status(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    user = await db.get(User, user_id)
-    if user is None:
-        raise AppError("NOT_FOUND", "User not found.", status.HTTP_404_NOT_FOUND)
-    if user.id == admin.id:
-        raise AppError(
-            "CANNOT_SUSPEND_SELF", "You cannot change your own account status.", status.HTTP_400_BAD_REQUEST
-        )
-    user.status = payload.status
-    db.add(user)
-    activity_log_service.record(
-        db,
-        "USER",
-        user.id,
-        "BLOCKED" if payload.status == UserStatus.SUSPENDED else "UNBLOCKED",
-        actor_id=admin.id,
-    )
-    await db.commit()
-    await db.refresh(user)
-    return user
+    return await user_service.update_status(db, user_id, payload.status, admin)
 
 
 @router.post("/bulk-status", response_model=list[UserRead])
@@ -99,27 +56,7 @@ async def bulk_update_user_status(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    updated: list[User] = []
-    for user_id in payload.user_ids:
-        if user_id == admin.id:
-            continue
-        user = await db.get(User, user_id)
-        if user is None:
-            continue
-        user.status = payload.status
-        db.add(user)
-        activity_log_service.record(
-            db,
-            "USER",
-            user.id,
-            "BLOCKED" if payload.status == UserStatus.SUSPENDED else "UNBLOCKED",
-            actor_id=admin.id,
-        )
-        updated.append(user)
-    await db.commit()
-    for user in updated:
-        await db.refresh(user)
-    return updated
+    return await user_service.bulk_update_status(db, payload.user_ids, payload.status, admin)
 
 
 @router.patch("/{user_id}/role", response_model=UserRead)
@@ -129,25 +66,7 @@ async def update_user_role(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    user = await db.get(User, user_id)
-    if user is None:
-        raise AppError("NOT_FOUND", "User not found.", status.HTTP_404_NOT_FOUND)
-    if user.id == admin.id:
-        raise AppError("CANNOT_CHANGE_OWN_ROLE", "You cannot change your own role.", status.HTTP_400_BAD_REQUEST)
-    previous_role = user.role
-    user.role = payload.role
-    db.add(user)
-    activity_log_service.record(
-        db,
-        "USER",
-        user.id,
-        "ROLE_CHANGED",
-        actor_id=admin.id,
-        metadata={"from": previous_role.value, "to": payload.role.value},
-    )
-    await db.commit()
-    await db.refresh(user)
-    return user
+    return await user_service.update_role(db, user_id, payload.role, admin)
 
 
 @router.get("/{user_id}/submissions", response_model=list[SubmissionRead])
@@ -174,12 +93,7 @@ async def list_user_credit_transactions(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.exec(
-        select(CreditTransaction)
-        .where(CreditTransaction.user_id == user_id)
-        .order_by(CreditTransaction.created_at.desc())
-    )
-    return list(result.all())
+    return await credit_service.list_transactions_for_user(db, user_id)
 
 
 @router.post("/{user_id}/credits", response_model=UserRead)
@@ -189,10 +103,4 @@ async def grant_user_credit(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    user = await db.get(User, user_id)
-    if user is None:
-        raise AppError("NOT_FOUND", "User not found.", status.HTTP_404_NOT_FOUND)
-    await grant_credit(db, user, payload.amount, CreditTransactionType.ADMIN_GRANT, actor_id=admin.id)
-    await db.commit()
-    await db.refresh(user)
-    return user
+    return await user_service.grant_credit(db, user_id, payload.amount, admin)

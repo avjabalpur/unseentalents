@@ -3,16 +3,13 @@ import io
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.dependencies import require_role
 from app.db import get_db
-from app.models.credit_transaction import CreditTransaction
 from app.models.enums import UserRole
-from app.models.submission import Submission
 from app.models.user import User
-from app.services import submission_service
+from app.services import credit_service, submission_service, user_service
 
 router = APIRouter(prefix="/admin/export", tags=["export"])
 
@@ -35,10 +32,10 @@ async def export_users(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.exec(select(User).order_by(User.created_at.desc()))
+    users = await user_service.list_users(db)
     rows = [
         [u.id, u.name, u.username, u.email, u.role.value, u.status.value, u.credit_balance, u.created_at]
-        for u in result.all()
+        for u in users
     ]
     return _csv_response(
         "users.csv", ["id", "name", "username", "email", "role", "status", "credit_balance", "created_at"], rows
@@ -50,8 +47,7 @@ async def export_submissions(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.exec(select(Submission).order_by(Submission.uploaded_at.desc()))
-    submissions = list(result.all())
+    submissions = await submission_service.list_all_submissions(db)
     rows = []
     for s in submissions:
         vote_count = await submission_service.count_votes(db, s.id)
@@ -79,9 +75,9 @@ async def export_credit_transactions(
     admin: User = Depends(require_role(UserRole.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.exec(select(CreditTransaction).order_by(CreditTransaction.created_at.desc()))
+    transactions = await credit_service.list_all_transactions(db)
     rows = [
-        [t.id, t.user_id, t.amount, t.balance_after, t.type.value, t.created_at] for t in result.all()
+        [t.id, t.user_id, t.amount, t.balance_after, t.type.value, t.created_at] for t in transactions
     ]
     return _csv_response(
         "credit_transactions.csv", ["id", "user_id", "amount", "balance_after", "type", "created_at"], rows

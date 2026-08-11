@@ -58,6 +58,11 @@ async def list_pending_moderation(db: AsyncSession, limit: int | None = None, of
     return list(result.all())
 
 
+async def list_all_submissions(db: AsyncSession) -> list[Submission]:
+    result = await db.exec(select(Submission).order_by(Submission.uploaded_at.desc()))
+    return list(result.all())
+
+
 async def count_votes(db: AsyncSession, submission_id: uuid.UUID) -> int:
     result = await db.exec(select(func.count(Vote.id)).where(Vote.submission_id == submission_id))
     return result.one()

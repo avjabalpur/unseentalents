@@ -154,6 +154,25 @@ already voted," "compute stage results" — live in `services/`, never in a
 router body and never in a React component. This keeps the rules testable
 without spinning up HTTP, and keeps routers readable as a map of the API surface.
 
+This split is enforced strictly, not just as a style preference: **no router
+function may call `db.exec`, `db.get`, `db.add`, `db.commit`, `db.refresh`, or
+`db.delete`.** Even a single-row lookup used only to enrich a response (e.g.
+resolving an actor's name for an activity-log entry) goes through a service
+function. A router's job ends at parsing the request, resolving the URL, calling
+service function(s), mapping the result onto the response schema, and
+translating domain errors to HTTP status codes.
+
+Within services, the transaction boundary follows one convention: a **top-level
+service function** — one called directly by a router — owns the unit of work
+and calls `await db.commit()` (+ `db.refresh()`) before returning. A
+**composable/leaf service function** — one called by another service function
+rather than by a router — calls `db.flush()` only, never commits, so it can be
+combined inside a caller's larger transaction. `credit_service.grant_credit()`
+is the reference example: it flushes so it can be reused inside
+`submission_service.upload_submission()`'s larger transaction, while
+`user_service.grant_credit()` (called directly by the router) wraps it and
+commits.
+
 ## 5. Naming Conventions (Python)
 
 | Item | Convention | Example |

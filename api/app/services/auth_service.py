@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -57,6 +59,13 @@ async def authenticate_user(db: AsyncSession, email: str, password: str) -> User
 
 def issue_tokens(user: User) -> tuple[str, str]:
     return create_access_token(user.id), create_refresh_token(user.id)
+
+
+async def get_user_or_401(db: AsyncSession, user_id: uuid.UUID) -> User:
+    user = await db.get(User, user_id)
+    if user is None:
+        raise AppError("UNAUTHENTICATED", "User not found.", status.HTTP_401_UNAUTHORIZED)
+    return user
 
 
 async def change_password(db: AsyncSession, user: User, current_password: str, new_password: str) -> None:

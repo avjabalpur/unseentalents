@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import status
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.errors import AppError
@@ -44,3 +45,24 @@ async def spend_upload_credit(db: AsyncSession, user: User, reference_id: uuid.U
             status.HTTP_402_PAYMENT_REQUIRED,
         )
     return await grant_credit(db, user, -1, CreditTransactionType.UPLOAD_SPEND, reference_id)
+
+
+async def admin_grant_credit(db: AsyncSession, user: User, amount: int, actor_id: uuid.UUID) -> User:
+    await grant_credit(db, user, amount, CreditTransactionType.ADMIN_GRANT, actor_id=actor_id)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def list_transactions_for_user(db: AsyncSession, user_id: uuid.UUID) -> list[CreditTransaction]:
+    result = await db.exec(
+        select(CreditTransaction)
+        .where(CreditTransaction.user_id == user_id)
+        .order_by(CreditTransaction.created_at.desc())
+    )
+    return list(result.all())
+
+
+async def list_all_transactions(db: AsyncSession) -> list[CreditTransaction]:
+    result = await db.exec(select(CreditTransaction).order_by(CreditTransaction.created_at.desc()))
+    return list(result.all())
