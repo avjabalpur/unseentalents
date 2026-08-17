@@ -115,12 +115,13 @@ export default function AdminEventsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <TableSkeleton columns={7} />
+            <TableSkeleton columns={8} />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Creator</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Overview</TableHead>
                   <TableHead>Stages</TableHead>
@@ -133,6 +134,16 @@ export default function AdminEventsPage() {
                 {events?.map((event) => (
                   <TableRow key={event.id}>
                     <TableCell className="font-medium">{event.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">{event.creatorName ?? "—"}</span>
+                        {event.creatorRole === "ORGANIZER" && (
+                          <Badge variant="outline" className="text-xs">
+                            Organizer
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={

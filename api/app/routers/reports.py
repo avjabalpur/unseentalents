@@ -31,10 +31,11 @@ async def create_report(
 async def list_admin_reports(
     status: ReportStatus | None = None,
     pagination: Pagination = Depends(Pagination),
-    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
-    reports = await report_service.list_reports(db, pagination, status_filter=status)
+    owner_id = actor.id if actor.role == UserRole.ORGANIZER else None
+    reports = await report_service.list_reports(db, pagination, status_filter=status, owner_id=owner_id)
     return [await report_service.to_read(db, r) for r in reports]
 
 
@@ -42,9 +43,10 @@ async def list_admin_reports(
 async def resolve_report(
     report_id: uuid.UUID,
     payload: ReportResolve,
-    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
     report = await report_service.get_report_or_404(db, report_id)
-    updated = await report_service.resolve_report(db, report, payload.status, admin)
+    await report_service.assert_can_resolve(db, report, actor)
+    updated = await report_service.resolve_report(db, report, payload.status, actor)
     return await report_service.to_read(db, updated)

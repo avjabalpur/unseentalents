@@ -25,6 +25,9 @@ class EventRead(CamelModel):
     event_type_id: uuid.UUID
     status: EventStatus
     created_at: datetime
+    created_by: uuid.UUID
+    creator_name: str | None = None
+    creator_role: str | None = None
     computed_status: str | None = None
     current_stage_name: str | None = None
     first_stage_start_at: datetime | None = None

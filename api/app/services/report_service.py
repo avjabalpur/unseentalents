@@ -5,10 +5,13 @@ from fastapi import status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.authz import assert_owner_or_staff
 from app.core.dependencies import Pagination
 from app.core.errors import AppError
-from app.models.enums import ReportStatus
+from app.models.enums import ReportStatus, ReportTargetType, UserRole
 from app.models.report import Report
+from app.models.stage import Stage
+from app.models.submission import Submission
 from app.models.user import User
 from app.schemas.report import ReportCreate, ReportRead
 from app.services import activity_log_service
@@ -46,13 +49,42 @@ async def to_read(db: AsyncSession, report: Report) -> ReportRead:
     return data
 
 
-async def list_reports(db: AsyncSession, pagination: Pagination, status_filter: ReportStatus | None = None) -> list[Report]:
+async def list_reports(
+    db: AsyncSession,
+    pagination: Pagination,
+    status_filter: ReportStatus | None = None,
+    owner_id: uuid.UUID | None = None,
+) -> list[Report]:
     query = select(Report)
     if status_filter is not None:
         query = query.where(Report.status == status_filter)
+    if owner_id is not None:
+        # Organizers only see reports against submissions in events they own — reports
+        # about a user account have no event owner and stay admin/moderator-only.
+        query = (
+            query.join(Submission, Submission.id == Report.target_id)
+            .join(Stage, Stage.id == Submission.stage_id)
+            .where(Report.target_type == ReportTargetType.SUBMISSION, Stage.created_by == owner_id)
+        )
     query = query.order_by(Report.created_at.desc()).limit(pagination.limit).offset(pagination.offset)
     result = await db.exec(query)
     return list(result.all())
+
+
+async def assert_can_resolve(db: AsyncSession, report: Report, actor: User) -> None:
+    if actor.role != UserRole.ORGANIZER:
+        return
+    if report.target_type != ReportTargetType.SUBMISSION:
+        raise AppError(
+            "FORBIDDEN", "You do not have permission to perform this action.", status.HTTP_403_FORBIDDEN
+        )
+    submission = await db.get(Submission, report.target_id)
+    if submission is None:
+        raise AppError("NOT_FOUND", "Report target not found.", status.HTTP_404_NOT_FOUND)
+    stage = await db.get(Stage, submission.stage_id)
+    if stage is None:
+        raise AppError("NOT_FOUND", "Report target not found.", status.HTTP_404_NOT_FOUND)
+    assert_owner_or_staff(actor, stage.created_by)
 
 
 async def get_report_or_404(db: AsyncSession, report_id: uuid.UUID) -> Report:

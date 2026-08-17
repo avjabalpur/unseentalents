@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePendingSubmissions, useAdminContactMessages, useAdminReports } from "@/lib/hooks/useAdmin";
+import { useAdminOrganizerApplications } from "@/lib/hooks/useOrganizerApplications";
 import { mediaUrl } from "@/lib/api-client";
 import { Brand, BrandMark } from "@/components/shared/Brand";
 import { Button } from "@/components/ui/button";
@@ -89,10 +90,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: pendingSubmissions } = usePendingSubmissions();
   const { data: contactMessages } = useAdminContactMessages(isAdmin);
   const { data: pendingReports } = useAdminReports("PENDING");
+  const { data: pendingOrganizerApplications } = useAdminOrganizerApplications("PENDING", isAdmin);
   const pendingCount = pendingSubmissions?.length ?? 0;
   const unreadContactCount = contactMessages?.filter((m) => !m.isRead).length ?? 0;
   const pendingReportCount = pendingReports?.length ?? 0;
-  const notificationCount = pendingCount + unreadContactCount + pendingReportCount;
+  const pendingOrganizerApplicationCount = isAdmin ? (pendingOrganizerApplications?.length ?? 0) : 0;
+  const notificationCount = pendingCount + unreadContactCount + pendingReportCount + pendingOrganizerApplicationCount;
 
   useEffect(() => {
     if (!isLoading && (!user || (user.role !== "ADMIN" && user.role !== "MODERATOR"))) {
@@ -361,6 +364,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {pendingReportCount > 0 && (
                     <DropdownMenuItem render={<Link href="/admin/reports" />}>
                       {pendingReportCount} pending report{pendingReportCount === 1 ? "" : "s"}
+                    </DropdownMenuItem>
+                  )}
+                  {pendingOrganizerApplicationCount > 0 && (
+                    <DropdownMenuItem render={<Link href="/admin/organizer-applications" />}>
+                      {pendingOrganizerApplicationCount} organizer application
+                      {pendingOrganizerApplicationCount === 1 ? "" : "s"} awaiting review
                     </DropdownMenuItem>
                   )}
                 </>

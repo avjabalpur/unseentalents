@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
+import { Breadcrumb } from "@/components/admin/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
 import type { EventStatus } from "@/types/api";
 
@@ -61,17 +62,15 @@ export default function OrganizerEventsPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold uppercase tracking-wide">My Events</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Newly created events need admin review before they&apos;re published.
-          </p>
-        </div>
+        <Breadcrumb items={[{ label: "My Events" }]} />
         <Button size="sm" onClick={() => setFormOpen(true)}>
           <Plus className="size-4" />
           Create event
         </Button>
       </div>
+      <p className="-mt-6 text-sm text-muted-foreground">
+        Newly created events need admin review before they&apos;re published.
+      </p>
 
       <Sheet open={formOpen} onOpenChange={setFormOpen}>
         <SheetContent>

@@ -6,11 +6,13 @@ from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.authz import assert_owner_or_staff
 from app.core.errors import AppError
 from app.media.thumbnail import generate_image_thumbnail, generate_video_thumbnail
 from app.models.enums import MediaType, ProcessingStatus, SubmissionStatus, UserStatus
 from app.models.event_type import EventType
 from app.models.participation import Participation
+from app.models.stage import Stage
 from app.models.submission import Submission
 from app.models.user import User
 from app.models.vote import Vote
@@ -45,13 +47,13 @@ async def list_submissions_for_stage(
     return list(result.all())
 
 
-async def list_pending_moderation(db: AsyncSession, limit: int | None = None, offset: int = 0) -> list[Submission]:
-    query = (
-        select(Submission)
-        .where(Submission.status == SubmissionStatus.PENDING_MODERATION)
-        .order_by(Submission.uploaded_at)
-        .offset(offset)
-    )
+async def list_pending_moderation(
+    db: AsyncSession, limit: int | None = None, offset: int = 0, owner_id: uuid.UUID | None = None
+) -> list[Submission]:
+    query = select(Submission).where(Submission.status == SubmissionStatus.PENDING_MODERATION)
+    if owner_id is not None:
+        query = query.join(Stage, Stage.id == Submission.stage_id).where(Stage.created_by == owner_id)
+    query = query.order_by(Submission.uploaded_at).offset(offset)
     if limit is not None:
         query = query.limit(limit)
     result = await db.exec(query)
@@ -73,6 +75,11 @@ async def get_owner(db: AsyncSession, submission: Submission) -> User | None:
     if participation is None:
         return None
     return await db.get(User, participation.user_id)
+
+
+async def assert_can_moderate(db: AsyncSession, submission: Submission, actor: User) -> None:
+    stage = await stage_service.get_stage_or_404(db, submission.stage_id)
+    assert_owner_or_staff(actor, stage.created_by)
 
 
 async def moderate_submission(

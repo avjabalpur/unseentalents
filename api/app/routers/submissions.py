@@ -136,10 +136,11 @@ async def list_my_votes(current_user: CurrentUser, db: AsyncSession = Depends(ge
 async def list_pending(
     limit: int | None = Query(None, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
-    submissions = await submission_service.list_pending_moderation(db, limit=limit, offset=offset)
+    owner_id = actor.id if actor.role == UserRole.ORGANIZER else None
+    submissions = await submission_service.list_pending_moderation(db, limit=limit, offset=offset, owner_id=owner_id)
     return [await _to_read(db, s) for s in submissions]
 
 
@@ -148,25 +149,32 @@ async def moderate(
     submission_id: uuid.UUID,
     approve: bool,
     reason: str | None = None,
-    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
     submission = await submission_service.get_submission_or_404(db, submission_id)
-    updated = await submission_service.moderate_submission(db, submission, approve, reason, actor_id=admin.id)
+    await submission_service.assert_can_moderate(db, submission, actor)
+    updated = await submission_service.moderate_submission(db, submission, approve, reason, actor_id=actor.id)
     return await _to_read(db, updated)
 
 
 @router.post("/submissions/bulk-moderate", response_model=list[SubmissionRead])
 async def bulk_moderate(
     payload: BulkModerateRequest,
-    admin: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.MODERATOR, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
+    # Resolve and authorize every submission before mutating any of them — moderate_submission
+    # commits per item, so validating everything up front avoids a partial batch where earlier
+    # items are already approved/rejected by the time a later item 403s.
+    submissions = [await submission_service.get_submission_or_404(db, sid) for sid in payload.submission_ids]
+    for submission in submissions:
+        await submission_service.assert_can_moderate(db, submission, actor)
+
     results = []
-    for submission_id in payload.submission_ids:
-        submission = await submission_service.get_submission_or_404(db, submission_id)
+    for submission in submissions:
         updated = await submission_service.moderate_submission(
-            db, submission, payload.approve, payload.reason, actor_id=admin.id
+            db, submission, payload.approve, payload.reason, actor_id=actor.id
         )
         results.append(await _to_read(db, updated))
     return results

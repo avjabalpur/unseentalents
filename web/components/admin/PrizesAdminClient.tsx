@@ -8,7 +8,7 @@ import { useEventTypes } from "@/lib/hooks/useEventTypes";
 import { useCreatePrize, useDeletePrize } from "@/lib/hooks/useAdmin";
 import { ApiError } from "@/lib/api-client";
 import { EventStatusBadge } from "@/components/shared/EventStatusBadge";
-import { Breadcrumb } from "@/components/admin/Breadcrumb";
+import { Breadcrumb, type BreadcrumbItem } from "@/components/admin/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
-const DEFAULT_BREADCRUMB_BASE = [
+const DEFAULT_BREADCRUMB_BASE: BreadcrumbItem[] = [
   { label: "Dashboard", href: "/admin" },
   { label: "Events", href: "/admin/events" },
 ];
@@ -29,7 +29,7 @@ export function PrizesAdminClient({
   breadcrumbBase = DEFAULT_BREADCRUMB_BASE,
 }: {
   eventId: string;
-  breadcrumbBase?: { label: string; href: string }[];
+  breadcrumbBase?: BreadcrumbItem[];
 }) {
   const { data: event } = useEvent(eventId);
   const { data: eventTypes } = useEventTypes();

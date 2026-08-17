@@ -60,6 +60,9 @@ export interface Event {
   eventTypeId: string;
   status: EventStatus;
   createdAt: string;
+  createdBy: string;
+  creatorName: string | null;
+  creatorRole: UserRole | null;
   computedStatus: ComputedEventStatus | null;
   currentStageName: StageName | null;
   firstStageStartAt: string | null;

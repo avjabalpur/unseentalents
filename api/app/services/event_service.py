@@ -59,6 +59,11 @@ async def to_read(db: AsyncSession, event: Event) -> EventRead:
     data = EventRead.model_validate(event)
     data.computed_status = compute_event_status(stages)
 
+    creator = await db.get(User, event.created_by)
+    if creator is not None:
+        data.creator_name = creator.name
+        data.creator_role = creator.role.value
+
     if stages:
         ordered = sorted(stages, key=lambda s: s.order_index)
         data.first_stage_start_at = ordered[0].start_at

@@ -10,7 +10,7 @@ import { ApiError } from "@/lib/api-client";
 import { formatDate } from "@/lib/format";
 import type { AdvanceMode, StageName } from "@/types/api";
 import { EventStatusBadge } from "@/components/shared/EventStatusBadge";
-import { Breadcrumb } from "@/components/admin/Breadcrumb";
+import { Breadcrumb, type BreadcrumbItem } from "@/components/admin/Breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +38,7 @@ function toDatetimeLocalValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-const DEFAULT_BREADCRUMB_BASE = [
+const DEFAULT_BREADCRUMB_BASE: BreadcrumbItem[] = [
   { label: "Dashboard", href: "/admin" },
   { label: "Events", href: "/admin/events" },
 ];
@@ -48,7 +48,7 @@ export function StagesAdminClient({
   breadcrumbBase = DEFAULT_BREADCRUMB_BASE,
 }: {
   eventId: string;
-  breadcrumbBase?: { label: string; href: string }[];
+  breadcrumbBase?: BreadcrumbItem[];
 }) {
   const { data: event } = useEvent(eventId);
   const { data: eventTypes } = useEventTypes();
@@ -60,8 +60,8 @@ export function StagesAdminClient({
   const [formOpen, setFormOpen] = useState(false);
   const [name, setName] = useState<StageName>("BACKSTAGE");
   const [orderIndex, setOrderIndex] = useState(1);
-  const [startAt, setStartAt] = useState(toDatetimeLocalValue(new Date()));
-  const [endAt, setEndAt] = useState(toDatetimeLocalValue(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)));
+  const [startAt, setStartAt] = useState(() => toDatetimeLocalValue(new Date()));
+  const [endAt, setEndAt] = useState(() => toDatetimeLocalValue(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)));
   const [advanceMode, setAdvanceMode] = useState<AdvanceMode>("ADMIN_CURATED");
   const [advanceCount, setAdvanceCount] = useState(10);
   const [expandedStage, setExpandedStage] = useState<string | null>(null);

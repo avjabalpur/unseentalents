@@ -1,9 +1,23 @@
+"use client";
+
 import Link from "next/link";
 import { CalendarRange } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { Button } from "@/components/ui/button";
 
 export function BecomeOrganizerSection() {
+  const { user, isLoading } = useAuth();
+
+  if (!isLoading && (user?.role === "ADMIN" || user?.role === "MODERATOR")) return null;
+
+  const cta =
+    !user
+      ? { href: "/register/organizer", label: "Become an organizer" }
+      : user.role === "ORGANIZER"
+        ? { href: "/organizer", label: "Go to your dashboard" }
+        : { href: "/account/organizer", label: "Apply now" };
+
   return (
     <section
       className="relative overflow-hidden border-y border-white/10 bg-black py-20"
@@ -30,7 +44,7 @@ export function BecomeOrganizerSection() {
               size="lg"
               className="animate-pulse-glow uppercase tracking-wide transition-transform duration-200 hover:scale-105"
               nativeButton={false}
-              render={<Link href="/register/organizer">Become an organizer</Link>}
+              render={<Link href={cta.href}>{cta.label}</Link>}
             />
           </div>
         </FadeIn>
