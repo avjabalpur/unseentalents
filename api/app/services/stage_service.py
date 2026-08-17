@@ -6,12 +6,15 @@ from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.authz import assert_owner_or_staff
 from app.core.errors import AppError
 from app.models.enums import AdvanceMode, ParticipationStatus, SubmissionStatus
+from app.models.event import Event
 from app.models.participation import Participation
 from app.models.stage import Stage
 from app.models.stage_result import StageResult
 from app.models.submission import Submission
+from app.models.user import User
 from app.models.vote import Vote
 from app.schemas.stage import StageCreate
 from app.services import activity_log_service
@@ -44,12 +47,13 @@ async def list_stages_for_event(db: AsyncSession, event_id: uuid.UUID) -> list[S
     return list(result.all())
 
 
-async def create_stage(db: AsyncSession, event_id: uuid.UUID, data: StageCreate) -> Stage:
+async def create_stage(db: AsyncSession, event: Event, data: StageCreate, actor: User) -> Stage:
+    assert_owner_or_staff(actor, event.created_by)
     if data.end_at <= data.start_at:
         raise AppError(
             "INVALID_STAGE_WINDOW", "A stage's end time must be after its start time.", status.HTTP_400_BAD_REQUEST
         )
-    stage = Stage(event_id=event_id, **data.model_dump())
+    stage = Stage(event_id=event.id, created_by=event.created_by, **data.model_dump())
     db.add(stage)
     await db.commit()
     await db.refresh(stage)
@@ -87,12 +91,17 @@ async def get_due_stages(db: AsyncSession, now: datetime | None = None) -> list[
     return list(result.all())
 
 
-async def close_stage(db: AsyncSession, stage: Stage) -> list[StageResult]:
+async def close_stage(db: AsyncSession, stage: Stage, actor: User | None = None) -> list[StageResult]:
     """Tally votes, materialize StageResult rows, and auto-advance top N when configured.
 
     Only APPROVED submissions are counted; a participation with no approved
     submission for this stage simply has no StageResult row (implicitly out).
+
+    `actor` is None when called by the scheduled stage-close job (system-triggered,
+    no ownership check); the manual admin/organizer endpoint always passes it.
     """
+    if actor is not None:
+        assert_owner_or_staff(actor, stage.created_by)
     if stage.closed_at is not None:
         return []
 
@@ -143,9 +152,11 @@ async def close_stage(db: AsyncSession, stage: Stage) -> list[StageResult]:
 
 
 async def advance_participations(
-    db: AsyncSession, stage: Stage, participation_ids: list[uuid.UUID], actor_id: uuid.UUID | None = None
+    db: AsyncSession, stage: Stage, participation_ids: list[uuid.UUID], actor: User
 ) -> None:
-    """Admin-curated advancement: move the selected participations to the next stage."""
+    """Admin/organizer-curated advancement: move the selected participations to the next stage."""
+    assert_owner_or_staff(actor, stage.created_by)
+    actor_id = actor.id
     next_stage = await get_next_stage(db, stage.event_id, stage.order_index)
     for participation_id in participation_ids:
         participation = await db.get(Participation, participation_id)

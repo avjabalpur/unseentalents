@@ -134,7 +134,15 @@ export default function AdminEventsPage() {
                   <TableRow key={event.id}>
                     <TableCell className="font-medium">{event.name}</TableCell>
                     <TableCell>
-                      <Badge variant={event.status === "PUBLISHED" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          event.status === "PUBLISHED"
+                            ? "default"
+                            : event.status === "PENDING_REVIEW"
+                              ? "outline"
+                              : "secondary"
+                        }
+                      >
                         {event.status}
                       </Badge>
                     </TableCell>

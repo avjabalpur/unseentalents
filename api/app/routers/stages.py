@@ -23,11 +23,11 @@ async def list_stages(event_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 async def create_stage(
     event_id: uuid.UUID,
     payload: StageCreate,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
-    await event_service.get_event_or_404(db, event_id)
-    return await stage_service.create_stage(db, event_id, payload)
+    event = await event_service.get_event_or_404(db, event_id)
+    return await stage_service.create_stage(db, event, payload, actor)
 
 
 @router.get("/stages/{stage_id}/results", response_model=list[StageResultRead])
@@ -38,20 +38,20 @@ async def get_stage_results(stage_id: uuid.UUID, db: AsyncSession = Depends(get_
 @router.post("/stages/{stage_id}/close", response_model=list[StageResultRead])
 async def close_stage_now(
     stage_id: uuid.UUID,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
     stage = await stage_service.get_stage_or_404(db, stage_id)
-    return await stage_service.close_stage(db, stage)
+    return await stage_service.close_stage(db, stage, actor)
 
 
 @router.post("/stages/{stage_id}/advance")
 async def advance_stage(
     stage_id: uuid.UUID,
     payload: AdvanceRequest,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
     stage = await stage_service.get_stage_or_404(db, stage_id)
-    await stage_service.advance_participations(db, stage, payload.participation_ids, actor_id=admin.id)
+    await stage_service.advance_participations(db, stage, payload.participation_ids, actor)
     return {"success": True}

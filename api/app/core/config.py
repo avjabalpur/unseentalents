@@ -22,6 +22,9 @@ class Settings(BaseSettings):
 
     storage_backend: str = "local"
     storage_root: Path = Path(__file__).resolve().parents[2] / "storage"
+    # Never mounted as static — holds files that must only ever be served through an
+    # authenticated route (e.g. organizer identity documents).
+    private_storage_root: Path = Path(__file__).resolve().parents[2] / "private_storage"
 
     welcome_credit_amount: int = 2
 

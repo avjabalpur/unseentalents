@@ -4,6 +4,7 @@ from enum import Enum
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
     MODERATOR = "MODERATOR"
+    ORGANIZER = "ORGANIZER"
     USER = "USER"
 
 
@@ -14,6 +15,7 @@ class UserStatus(str, Enum):
 
 class EventStatus(str, Enum):
     DRAFT = "DRAFT"
+    PENDING_REVIEW = "PENDING_REVIEW"
     PUBLISHED = "PUBLISHED"
     ARCHIVED = "ARCHIVED"
 
@@ -92,3 +94,9 @@ class ReportStatus(str, Enum):
     PENDING = "PENDING"
     REVIEWED = "REVIEWED"
     DISMISSED = "DISMISSED"
+
+
+class OrganizerApplicationStatus(str, Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"

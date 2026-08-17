@@ -4,6 +4,7 @@ import type { Event, PublicSummary } from "@/types/api";
 import { EventsBrowser } from "@/components/user/EventsBrowser";
 import { RoundsGrid } from "@/components/user/RoundsGrid";
 import { FeaturedTopicsSection } from "@/components/user/FeaturedTopicsSection";
+import { BecomeOrganizerSection } from "@/components/user/BecomeOrganizerSection";
 import { OurStorySection } from "@/components/user/OurStorySection";
 import { TopicExcerptSection } from "@/components/user/TopicExcerptSection";
 import { StatsStrip } from "@/components/user/StatsStrip";
@@ -74,6 +75,8 @@ export default async function HomePage() {
       </section>
 
       <StatsStrip summary={summary} />
+
+      <BecomeOrganizerSection />
 
       <OurStorySection />
 

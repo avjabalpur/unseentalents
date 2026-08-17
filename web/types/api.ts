@@ -1,7 +1,7 @@
-export type UserRole = "ADMIN" | "MODERATOR" | "USER";
+export type UserRole = "ADMIN" | "MODERATOR" | "ORGANIZER" | "USER";
 export type UserStatus = "ACTIVE" | "SUSPENDED";
 export type MediaType = "VIDEO" | "IMAGE";
-export type EventStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type EventStatus = "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "ARCHIVED";
 export type ComputedEventStatus = "UPCOMING" | "ONGOING" | "CLOSED";
 export type StageName =
   | "BACKSTAGE"
@@ -28,6 +28,7 @@ export type CouponStatus = "ACTIVE" | "EXPIRED" | "DISABLED";
 export type TopicStatus = "DRAFT" | "PUBLISHED";
 export type ReportTargetType = "SUBMISSION" | "USER";
 export type ReportStatus = "PENDING" | "REVIEWED" | "DISMISSED";
+export type OrganizerApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface User {
   id: string;
@@ -183,6 +184,25 @@ export interface Report {
   notes: string | null;
   status: ReportStatus;
   reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+}
+
+export interface OrganizerApplication {
+  id: string;
+  userId: string;
+  applicantName: string | null;
+  applicantUsername: string | null;
+  status: OrganizerApplicationStatus;
+  legalName: string;
+  address: string;
+  idDocumentType: string;
+  idDocumentNumber: string;
+  organizationName: string | null;
+  reason: string | null;
+  rejectionReason: string | null;
+  reviewedBy: string | null;
+  reviewerName: string | null;
   reviewedAt: string | null;
   createdAt: string;
 }

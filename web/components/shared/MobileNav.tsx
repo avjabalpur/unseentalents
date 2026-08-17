@@ -106,6 +106,16 @@ export function MobileNav() {
                 <Link href="/account/votes" className={linkClass} onClick={close}>
                   My Votes
                 </Link>
+                {user.role === "USER" && (
+                  <Link href="/account/organizer" className={linkClass} onClick={close}>
+                    Become an Organizer
+                  </Link>
+                )}
+                {user.role === "ORGANIZER" && (
+                  <Link href="/organizer" className={linkClass} onClick={close}>
+                    Organizer Dashboard
+                  </Link>
+                )}
                 {user.role === "ADMIN" && (
                   <Link href="/admin" className={linkClass} onClick={close}>
                     Admin
@@ -141,6 +151,16 @@ export function MobileNav() {
                   render={
                     <Link href="/register" onClick={close}>
                       Register now
+                    </Link>
+                  }
+                />
+                <Button
+                  variant="outline"
+                  className="uppercase tracking-wide border-white/30 text-white hover:bg-white/10 hover:text-white"
+                  nativeButton={false}
+                  render={
+                    <Link href="/register/organizer" onClick={close}>
+                      Become an Organizer
                     </Link>
                   }
                 />

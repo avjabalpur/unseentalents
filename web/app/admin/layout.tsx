@@ -12,6 +12,7 @@ import {
   FileText,
   Flag,
   GalleryHorizontal,
+  IdCard,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -56,6 +57,7 @@ const NAV_LINKS = [
 ];
 
 const CONFIG_LINKS = [
+  { href: "/admin/organizer-applications", label: "Organizer Applications", icon: IdCard, adminOnly: true },
   { href: "/admin/topics", label: "Topics", icon: FileText, adminOnly: true },
   { href: "/admin/slides", label: "Hero Slider", icon: GalleryHorizontal, adminOnly: true },
   { href: "/admin/announcements", label: "Announcements", icon: Megaphone, adminOnly: true },

@@ -38,7 +38,18 @@ function toDatetimeLocalValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function StagesAdminClient({ eventId }: { eventId: string }) {
+const DEFAULT_BREADCRUMB_BASE = [
+  { label: "Dashboard", href: "/admin" },
+  { label: "Events", href: "/admin/events" },
+];
+
+export function StagesAdminClient({
+  eventId,
+  breadcrumbBase = DEFAULT_BREADCRUMB_BASE,
+}: {
+  eventId: string;
+  breadcrumbBase?: { label: string; href: string }[];
+}) {
   const { data: event } = useEvent(eventId);
   const { data: eventTypes } = useEventTypes();
   const eventType = eventTypes?.find((et) => et.id === event?.eventTypeId);
@@ -82,12 +93,7 @@ export function StagesAdminClient({ eventId }: { eventId: string }) {
       <div>
         <div className="flex items-center justify-between gap-3">
           <Breadcrumb
-            items={[
-              { label: "Dashboard", href: "/admin" },
-              { label: "Events", href: "/admin/events" },
-              { label: event?.name ?? "Event" },
-              { label: "Stages" },
-            ]}
+            items={[...breadcrumbBase, { label: event?.name ?? "Event" }, { label: "Stages" }]}
           />
           <Button size="sm" onClick={() => setFormOpen(true)}>
             <Plus className="size-4" />

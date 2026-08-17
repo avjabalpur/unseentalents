@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronDown, KeyRound, ShieldCheck, ThumbsUp, User as UserIcon, Video, LogOut } from "lucide-react";
+import {
+  Briefcase,
+  ChevronDown,
+  KeyRound,
+  ShieldCheck,
+  ThumbsUp,
+  User as UserIcon,
+  Video,
+  LogOut,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -128,6 +137,18 @@ export function SiteHeader() {
                   <ThumbsUp className="size-4" />
                   My Votes
                 </DropdownMenuItem>
+                {user.role === "USER" && (
+                  <DropdownMenuItem render={<Link href="/account/organizer" />}>
+                    <Briefcase className="size-4" />
+                    Become an Organizer
+                  </DropdownMenuItem>
+                )}
+                {user.role === "ORGANIZER" && (
+                  <DropdownMenuItem render={<Link href="/organizer" />}>
+                    <Briefcase className="size-4" />
+                    Organizer Dashboard
+                  </DropdownMenuItem>
+                )}
                 {user.role === "ADMIN" && (
                   <DropdownMenuItem render={<Link href="/admin" />}>
                     <ShieldCheck className="size-4" />
@@ -155,6 +176,13 @@ export function SiteHeader() {
                 className="uppercase tracking-wide"
                 nativeButton={false}
                 render={<Link href="/login">Sign in</Link>}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="uppercase tracking-wide border-white/30 text-white hover:bg-white/10 hover:text-white"
+                nativeButton={false}
+                render={<Link href="/register/organizer">Become an Organizer</Link>}
               />
               <Button
                 size="sm"

@@ -22,19 +22,19 @@ async def list_prizes(event_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 async def create_prize(
     event_id: uuid.UUID,
     payload: PrizeCreate,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
-    await event_service.get_event_or_404(db, event_id)
-    return await prize_service.create_prize(db, event_id, payload)
+    event = await event_service.get_event_or_404(db, event_id)
+    return await prize_service.create_prize(db, event, payload, actor)
 
 
 @router.delete("/prizes/{prize_id}")
 async def delete_prize(
     prize_id: uuid.UUID,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
     prize = await prize_service.get_prize_or_404(db, prize_id)
-    await prize_service.delete_prize(db, prize)
+    await prize_service.delete_prize(db, prize, actor)
     return {"success": True}

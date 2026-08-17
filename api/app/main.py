@@ -21,6 +21,7 @@ from app.routers import (
     event_types,
     events,
     export,
+    organizer_applications,
     prizes,
     reports,
     settings as settings_router,
@@ -67,6 +68,10 @@ app.add_exception_handler(RequestValidationError, validation_error_handler)
 settings.storage_root.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(settings.storage_root)), name="media")
 
+# Deliberately not mounted as static — private_storage holds files (e.g. organizer
+# identity documents) that must only ever be served through an authenticated route.
+settings.private_storage_root.mkdir(parents=True, exist_ok=True)
+
 for router in (
     announcements.router,
     auth.router,
@@ -88,6 +93,7 @@ for router in (
     reports.router,
     settings_router.router,
     export.router,
+    organizer_applications.router,
 ):
     app.include_router(router, prefix=settings.api_prefix)
 

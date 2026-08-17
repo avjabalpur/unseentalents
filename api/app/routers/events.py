@@ -20,6 +20,12 @@ async def list_events(db: AsyncSession = Depends(get_db)):
     return [await event_service.to_read(db, event) for event in events]
 
 
+@router.get("/mine", response_model=list[EventRead])
+async def list_my_events(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+    events = await event_service.list_events_for_owner(db, current_user.id)
+    return [await event_service.to_read(db, event) for event in events]
+
+
 @router.get("/{event_id}", response_model=EventRead)
 async def get_event(event_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     event = await event_service.get_event_or_404(db, event_id)
@@ -29,10 +35,10 @@ async def get_event(event_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 @router.post("", response_model=EventRead)
 async def create_event(
     payload: EventCreate,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
-    event = await event_service.create_event(db, payload, admin)
+    event = await event_service.create_event(db, payload, actor)
     return await event_service.to_read(db, event)
 
 
@@ -40,22 +46,22 @@ async def create_event(
 async def update_event(
     event_id: uuid.UUID,
     payload: EventUpdate,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
     event = await event_service.get_event_or_404(db, event_id)
-    updated = await event_service.update_event(db, event, payload)
+    updated = await event_service.update_event(db, event, payload, actor)
     return await event_service.to_read(db, updated)
 
 
 @router.delete("/{event_id}", status_code=204)
 async def delete_event(
     event_id: uuid.UUID,
-    admin: User = Depends(require_role(UserRole.ADMIN)),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
     db: AsyncSession = Depends(get_db),
 ):
     event = await event_service.get_event_or_404(db, event_id)
-    await event_service.delete_event(db, event)
+    await event_service.delete_event(db, event, actor)
 
 
 @router.get("/{event_id}/overview", response_model=EventOverview)

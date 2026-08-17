@@ -19,7 +19,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 
-export function PrizesAdminClient({ eventId }: { eventId: string }) {
+const DEFAULT_BREADCRUMB_BASE = [
+  { label: "Dashboard", href: "/admin" },
+  { label: "Events", href: "/admin/events" },
+];
+
+export function PrizesAdminClient({
+  eventId,
+  breadcrumbBase = DEFAULT_BREADCRUMB_BASE,
+}: {
+  eventId: string;
+  breadcrumbBase?: { label: string; href: string }[];
+}) {
   const { data: event } = useEvent(eventId);
   const { data: eventTypes } = useEventTypes();
   const eventType = eventTypes?.find((et) => et.id === event?.eventTypeId);
@@ -56,12 +67,7 @@ export function PrizesAdminClient({ eventId }: { eventId: string }) {
       <div>
         <div className="flex items-center justify-between gap-3">
           <Breadcrumb
-            items={[
-              { label: "Dashboard", href: "/admin" },
-              { label: "Events", href: "/admin/events" },
-              { label: event?.name ?? "Event" },
-              { label: "Prizes & Awards" },
-            ]}
+            items={[...breadcrumbBase, { label: event?.name ?? "Event" }, { label: "Prizes & Awards" }]}
           />
           <Button size="sm" onClick={() => setFormOpen(true)}>
             <Plus className="size-4" />

@@ -159,6 +159,12 @@ export default function RegisterPage() {
             Log in
           </Link>
         </p>
+        <p className="mt-2 text-center text-base text-muted-foreground">
+          Want to run your own event?{" "}
+          <Link href="/register/organizer" className="font-medium text-foreground underline underline-offset-4">
+            Register as an organizer
+          </Link>
+        </p>
       </div>
 
       <TermsDialog open={termsOpen} onOpenChange={setTermsOpen} />

@@ -6,6 +6,7 @@ from app.models.coupon import Coupon, CouponRedemption
 from app.models.credit_transaction import CreditTransaction
 from app.models.event import Event
 from app.models.event_type import EventType
+from app.models.organizer_application import OrganizerApplication
 from app.models.participation import Participation
 from app.models.prize import Prize
 from app.models.report import Report
@@ -39,4 +40,5 @@ __all__ = [
     "Report",
     "SiteSettings",
     "Announcement",
+    "OrganizerApplication",
 ]

@@ -5,8 +5,9 @@ from fastapi import status
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.authz import assert_owner_or_staff
 from app.core.errors import AppError
-from app.models.enums import EventStatus, ParticipationStatus, SubmissionStatus
+from app.models.enums import EventStatus, ParticipationStatus, SubmissionStatus, UserRole
 from app.models.event import Event
 from app.models.participation import Participation
 from app.models.prize import Prize
@@ -46,6 +47,13 @@ async def list_all_events(db: AsyncSession, limit: int | None = None, offset: in
     return list(result.all())
 
 
+async def list_events_for_owner(db: AsyncSession, user_id: uuid.UUID) -> list[Event]:
+    result = await db.exec(
+        select(Event).where(Event.created_by == user_id).order_by(Event.created_at.desc())
+    )
+    return list(result.all())
+
+
 async def to_read(db: AsyncSession, event: Event) -> EventRead:
     stages = await stage_service.list_stages_for_event(db, event.id)
     data = EventRead.model_validate(event)
@@ -70,16 +78,25 @@ async def get_event_or_404(db: AsyncSession, event_id: uuid.UUID) -> Event:
     return event
 
 
-async def create_event(db: AsyncSession, data: EventCreate, admin: User) -> Event:
-    event = Event(**data.model_dump(), created_by=admin.id)
+async def create_event(db: AsyncSession, data: EventCreate, actor: User) -> Event:
+    initial_status = EventStatus.PENDING_REVIEW if actor.role == UserRole.ORGANIZER else EventStatus.DRAFT
+    event = Event(**data.model_dump(), created_by=actor.id, status=initial_status)
     db.add(event)
     await db.commit()
     await db.refresh(event)
     return event
 
 
-async def update_event(db: AsyncSession, event: Event, data: EventUpdate) -> Event:
-    for field, value in data.model_dump(exclude_unset=True).items():
+async def update_event(db: AsyncSession, event: Event, data: EventUpdate, actor: User) -> Event:
+    assert_owner_or_staff(actor, event.created_by)
+    updates = data.model_dump(exclude_unset=True)
+    if actor.role == UserRole.ORGANIZER and "status" in updates:
+        raise AppError(
+            "CANNOT_SET_STATUS",
+            "Organizers cannot publish or archive events directly — an admin needs to review it first.",
+            status.HTTP_403_FORBIDDEN,
+        )
+    for field, value in updates.items():
         setattr(event, field, value)
     event.updated_at = datetime.now(timezone.utc)
     db.add(event)
@@ -88,7 +105,8 @@ async def update_event(db: AsyncSession, event: Event, data: EventUpdate) -> Eve
     return event
 
 
-async def delete_event(db: AsyncSession, event: Event) -> None:
+async def delete_event(db: AsyncSession, event: Event, actor: User) -> None:
+    assert_owner_or_staff(actor, event.created_by)
     in_use = await db.exec(select(Participation).where(Participation.event_id == event.id).limit(1))
     if in_use.first() is not None:
         raise AppError(
