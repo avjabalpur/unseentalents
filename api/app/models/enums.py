@@ -41,6 +41,14 @@ class AdvanceMode(str, Enum):
     ADMIN_CURATED = "ADMIN_CURATED"
 
 
+class WinningMode(str, Enum):
+    """How an event decides ranking/advancement, chosen once per event."""
+
+    AUDIENCE_VOTE = "AUDIENCE_VOTE"
+    JUDGE_SCORE = "JUDGE_SCORE"
+    ADMIN_CURATED = "ADMIN_CURATED"
+
+
 class ParticipationStatus(str, Enum):
     ACTIVE = "ACTIVE"
     ELIMINATED = "ELIMINATED"

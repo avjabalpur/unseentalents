@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowRight, Trophy } from "lucide-react";
+import { ArrowRight, Gavel, Trophy } from "lucide-react";
 import type { Event, Prize, Stage } from "@/types/api";
 import { useAuth } from "@/lib/auth-context";
 import { useMyParticipation, useParticipate } from "@/lib/hooks/useEvents";
@@ -132,6 +132,12 @@ export function EventDetailClient({ event, stages, prizes }: { event: Event; sta
                   </div>
                   <h1 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">{event.name}</h1>
                   <p className="mt-2 max-w-3xl text-white/70">{event.description}</p>
+                  {event.winningMode === "JUDGE_SCORE" && event.judges.length > 0 && (
+                    <p className="mt-3 flex items-center gap-1.5 text-sm text-white/70">
+                      <Gavel className="size-4 text-primary" />
+                      Judged by {event.judges.map((j) => j.judgeName).filter(Boolean).join(", ")}
+                    </p>
+                  )}
                 </div>
                 {!participation && (
                   <Button
@@ -204,7 +210,12 @@ export function EventDetailClient({ event, stages, prizes }: { event: Event; sta
                     key={submission.id}
                     submission={submission}
                     rank={index + 1}
-                    action={<VoteButton stageId={activeStage.id} submissionId={submission.id} />}
+                    winningMode={event.winningMode}
+                    action={
+                      event.winningMode === "AUDIENCE_VOTE" ? (
+                        <VoteButton stageId={activeStage.id} submissionId={submission.id} />
+                      ) : undefined
+                    }
                   />
                 ))}
               </div>

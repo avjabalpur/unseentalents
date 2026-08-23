@@ -8,8 +8,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.authz import assert_owner_or_staff
 from app.core.errors import AppError
-from app.models.enums import AdvanceMode, ParticipationStatus, SubmissionStatus
+from app.models.enums import AdvanceMode, ParticipationStatus, SubmissionStatus, WinningMode
 from app.models.event import Event
+from app.models.judge_score import JudgeScore
 from app.models.participation import Participation
 from app.models.stage import Stage
 from app.models.stage_result import StageResult
@@ -92,7 +93,8 @@ async def get_due_stages(db: AsyncSession, now: datetime | None = None) -> list[
 
 
 async def close_stage(db: AsyncSession, stage: Stage, actor: User | None = None) -> list[StageResult]:
-    """Tally votes, materialize StageResult rows, and auto-advance top N when configured.
+    """Tally votes (or judge scores, for JUDGE_SCORE events), materialize StageResult rows,
+    and auto-advance top N when configured.
 
     Only APPROVED submissions are counted; a participation with no approved
     submission for this stage simply has no StageResult row (implicitly out).
@@ -105,27 +107,47 @@ async def close_stage(db: AsyncSession, stage: Stage, actor: User | None = None)
     if stage.closed_at is not None:
         return []
 
-    result = await db.exec(
+    event = await db.get(Event, stage.event_id)
+    winning_mode = event.winning_mode if event is not None else WinningMode.AUDIENCE_VOTE
+
+    vote_result = await db.exec(
         select(Submission.participation_id, func.count(Vote.id).label("vote_count"))
         .select_from(Submission)
         .join(Vote, Vote.submission_id == Submission.id, isouter=True)
         .where(Submission.stage_id == stage.id, Submission.status == SubmissionStatus.APPROVED)
         .group_by(Submission.participation_id)
     )
-    rows = result.all()
-    ranked = sorted(rows, key=lambda row: row[1] or 0, reverse=True)
+    vote_counts: dict[uuid.UUID, int] = {pid: count or 0 for pid, count in vote_result.all()}
+
+    judge_totals: dict[uuid.UUID, float] = {}
+    if winning_mode == WinningMode.JUDGE_SCORE:
+        judge_result = await db.exec(
+            select(Submission.participation_id, func.sum(JudgeScore.score))
+            .select_from(Submission)
+            .join(JudgeScore, JudgeScore.submission_id == Submission.id, isouter=True)
+            .where(Submission.stage_id == stage.id, Submission.status == SubmissionStatus.APPROVED)
+            .group_by(Submission.participation_id)
+        )
+        judge_totals = {pid: float(total) for pid, total in judge_result.all() if total is not None}
+
+    if winning_mode == WinningMode.JUDGE_SCORE:
+        ranked = sorted(vote_counts.keys(), key=lambda pid: judge_totals.get(pid, 0.0), reverse=True)
+    else:
+        ranked = sorted(vote_counts.keys(), key=lambda pid: vote_counts.get(pid, 0), reverse=True)
 
     stage_results: list[StageResult] = []
-    for rank, (participation_id, vote_count) in enumerate(ranked, start=1):
+    for rank, participation_id in enumerate(ranked, start=1):
         advance = (
-            stage.advance_mode == AdvanceMode.AUTO_TOP_N
+            winning_mode != WinningMode.ADMIN_CURATED
+            and stage.advance_mode == AdvanceMode.AUTO_TOP_N
             and stage.advance_count is not None
             and rank <= stage.advance_count
         )
         stage_result = StageResult(
             stage_id=stage.id,
             participation_id=participation_id,
-            vote_count=vote_count or 0,
+            vote_count=vote_counts.get(participation_id, 0),
+            judge_score_total=judge_totals.get(participation_id) if winning_mode == WinningMode.JUDGE_SCORE else None,
             rank=rank,
             advanced=advance,
         )
@@ -140,6 +162,7 @@ async def close_stage(db: AsyncSession, stage: Stage, actor: User | None = None)
                 await _log_stage_outcome(db, stage, participation_id, "ADVANCED_STAGE")
             else:
                 participation.status = ParticipationStatus.WINNER
+                participation.updated_at = datetime.now(timezone.utc)
                 await _log_stage_outcome(db, stage, participation_id, "WON")
             db.add(participation)
         else:
@@ -167,6 +190,7 @@ async def advance_participations(
             await _log_stage_outcome(db, stage, participation_id, "ADVANCED_STAGE", actor_id=actor_id)
         else:
             participation.status = ParticipationStatus.WINNER
+            participation.updated_at = datetime.now(timezone.utc)
             await _log_stage_outcome(db, stage, participation_id, "WON", actor_id=actor_id)
         db.add(participation)
 

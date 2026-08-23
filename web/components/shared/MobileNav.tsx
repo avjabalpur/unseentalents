@@ -80,6 +80,12 @@ export function MobileNav() {
             <Link href="/gallery" className={linkClass} onClick={close}>
               Gallery
             </Link>
+            <Link href="/winners" className={linkClass} onClick={close}>
+              Winners
+            </Link>
+            <Link href="/organizers" className={linkClass} onClick={close}>
+              Organizers
+            </Link>
             <Link href="/pages/whats-new" className={linkClass} onClick={close}>
               What&apos;s New
             </Link>

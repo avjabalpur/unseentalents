@@ -19,7 +19,8 @@ import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } 
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
-import type { EventStatus } from "@/types/api";
+import { WinningModeField } from "@/components/admin/WinningModeField";
+import type { EventStatus, WinningMode } from "@/types/api";
 
 const STATUS_BADGE: Record<EventStatus, "default" | "secondary" | "outline"> = {
   DRAFT: "secondary",
@@ -37,6 +38,7 @@ export default function OrganizerEventsPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [eventTypeId, setEventTypeId] = useState<string>("");
+  const [winningMode, setWinningMode] = useState<WinningMode>("AUDIENCE_VOTE");
 
   const handleCreate = (e: FormEvent) => {
     e.preventDefault();
@@ -45,13 +47,14 @@ export default function OrganizerEventsPage() {
       return;
     }
     createEvent.mutate(
-      { name, description, eventTypeId },
+      { name, description, eventTypeId, winningMode },
       {
         onSuccess: () => {
           toast.success("Event submitted — it needs admin review before it goes live.");
           setName("");
           setDescription("");
           setEventTypeId("");
+          setWinningMode("AUDIENCE_VOTE");
           setFormOpen(false);
         },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create event."),
@@ -102,6 +105,7 @@ export default function OrganizerEventsPage() {
                 <Label>Description</Label>
                 <Input value={description} onChange={(e) => setDescription(e.target.value)} />
               </div>
+              <WinningModeField value={winningMode} onChange={setWinningMode} />
             </form>
           </SheetBody>
           <SheetFooter>
@@ -136,6 +140,11 @@ export default function OrganizerEventsPage() {
                     <TableCell className="font-medium">{event.name}</TableCell>
                     <TableCell>
                       <Badge variant={STATUS_BADGE[event.status]}>{event.status}</Badge>
+                      {event.winningMode === "JUDGE_SCORE" && (
+                        <span className="ml-1.5 text-xs text-muted-foreground">
+                          ({event.judges.length}/5 judges)
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Link

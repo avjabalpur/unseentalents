@@ -9,7 +9,7 @@ from app.models.enums import UserRole
 from app.models.user import User
 from app.schemas.credit import AdminGrantCreditRequest, CreditTransactionRead
 from app.schemas.submission import SubmissionRead
-from app.schemas.user import BulkUserStatusUpdate, UserRead, UserRoleUpdate, UserStatusUpdate, UserUpdate
+from app.schemas.user import BulkUserStatusUpdate, UserRead, UserRoleUpdate, UserSearchRead, UserStatusUpdate, UserUpdate
 from app.services import credit_service, submission_service, user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -23,6 +23,15 @@ async def list_users(
     db: AsyncSession = Depends(get_db),
 ):
     return await user_service.list_users(db, limit=limit, offset=offset)
+
+
+@router.get("/search", response_model=list[UserSearchRead])
+async def search_users(
+    q: str = Query(..., min_length=2),
+    actor: User = Depends(require_role(UserRole.ADMIN, UserRole.ORGANIZER)),
+    db: AsyncSession = Depends(get_db),
+):
+    return await user_service.search_users(db, q)
 
 
 @router.patch("/me", response_model=UserRead)

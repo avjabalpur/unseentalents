@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TableSkeleton } from "@/components/admin/TableSkeleton";
 import { Breadcrumb } from "@/components/admin/Breadcrumb";
+import { WinningModeField } from "@/components/admin/WinningModeField";
+import type { WinningMode } from "@/types/api";
 
 export default function AdminEventsPage() {
   const { data: events, isLoading } = useAdminEvents();
@@ -31,11 +33,13 @@ export default function AdminEventsPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [eventTypeId, setEventTypeId] = useState<string>("");
+  const [winningMode, setWinningMode] = useState<WinningMode>("AUDIENCE_VOTE");
 
   const handleDuplicate = (event: Event) => {
     setName(`Copy of ${event.name}`);
     setDescription(event.description ?? "");
     setEventTypeId(event.eventTypeId);
+    setWinningMode(event.winningMode);
     setFormOpen(true);
   };
 
@@ -46,7 +50,7 @@ export default function AdminEventsPage() {
       return;
     }
     createEvent.mutate(
-      { name, description, eventTypeId },
+      { name, description, eventTypeId, winningMode },
       {
         onSuccess: () => {
           toast.success("Event created as draft.");
@@ -99,6 +103,7 @@ export default function AdminEventsPage() {
                 <Label>Description</Label>
                 <Input value={description} onChange={(e) => setDescription(e.target.value)} />
               </div>
+              <WinningModeField value={winningMode} onChange={setWinningMode} />
             </form>
           </SheetBody>
           <SheetFooter>
@@ -115,7 +120,7 @@ export default function AdminEventsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <TableSkeleton columns={8} />
+            <TableSkeleton columns={9} />
           ) : (
             <Table>
               <TableHeader>
@@ -126,6 +131,7 @@ export default function AdminEventsPage() {
                   <TableHead>Overview</TableHead>
                   <TableHead>Stages</TableHead>
                   <TableHead>Prizes</TableHead>
+                  <TableHead>Judges</TableHead>
                   <TableHead>Publish</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -180,6 +186,18 @@ export default function AdminEventsPage() {
                       >
                         Configure prizes
                       </Link>
+                    </TableCell>
+                    <TableCell>
+                      {event.winningMode === "JUDGE_SCORE" ? (
+                        <Link
+                          href={`/admin/events/${event.id}/judges`}
+                          className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-primary transition-colors hover:bg-accent"
+                        >
+                          {event.judges.length}/5 judges
+                        </Link>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {event.status !== "PUBLISHED" && (

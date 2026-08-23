@@ -35,6 +35,16 @@ class UserRoleUpdate(CamelModel):
     role: UserRole
 
 
+class UserSearchRead(CamelModel):
+    """Minimal public-safe fields — used by judge/user pickers that organizers can
+    reach, so it deliberately omits email, role, status, and credit balance."""
+
+    id: uuid.UUID
+    name: str
+    username: str
+    avatar_key: str | None = None
+
+
 class BulkUserStatusUpdate(CamelModel):
     user_ids: list[uuid.UUID]
     status: UserStatus

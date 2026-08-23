@@ -8,5 +8,6 @@ class StageResultRead(CamelModel):
     stage_id: uuid.UUID
     participation_id: uuid.UUID
     vote_count: int
+    judge_score_total: float | None = None
     rank: int
     advanced: bool

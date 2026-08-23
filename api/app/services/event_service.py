@@ -7,7 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.authz import assert_owner_or_staff
 from app.core.errors import AppError
-from app.models.enums import EventStatus, ParticipationStatus, SubmissionStatus, UserRole
+from app.models.enums import EventStatus, ParticipationStatus, SubmissionStatus, UserRole, WinningMode
 from app.models.event import Event
 from app.models.participation import Participation
 from app.models.prize import Prize
@@ -17,7 +17,7 @@ from app.models.submission import Submission
 from app.models.user import User
 from app.schemas.event import EventCreate, EventRead, EventUpdate
 from app.schemas.stage import StageRead, StageStats
-from app.services import stage_service
+from app.services import judge_service, stage_service
 
 
 def compute_event_status(stages: list[Stage], now: datetime | None = None) -> str:
@@ -54,6 +54,24 @@ async def list_events_for_owner(db: AsyncSession, user_id: uuid.UUID) -> list[Ev
     return list(result.all())
 
 
+async def list_published_events_for_owner(db: AsyncSession, user_id: uuid.UUID) -> list[Event]:
+    """Published-only events for a given creator — used by the public organizer profile,
+    which must never surface an organizer's draft/pending-review events."""
+    result = await db.exec(
+        select(Event)
+        .where(Event.created_by == user_id, Event.status == EventStatus.PUBLISHED)
+        .order_by(Event.created_at.desc())
+    )
+    return list(result.all())
+
+
+async def count_published_events_for_owner(db: AsyncSession, user_id: uuid.UUID) -> int:
+    result = await db.exec(
+        select(func.count(Event.id)).where(Event.created_by == user_id, Event.status == EventStatus.PUBLISHED)
+    )
+    return result.one()
+
+
 async def to_read(db: AsyncSession, event: Event) -> EventRead:
     stages = await stage_service.list_stages_for_event(db, event.id)
     data = EventRead.model_validate(event)
@@ -63,6 +81,10 @@ async def to_read(db: AsyncSession, event: Event) -> EventRead:
     if creator is not None:
         data.creator_name = creator.name
         data.creator_role = creator.role.value
+
+    if event.winning_mode == WinningMode.JUDGE_SCORE:
+        judges = await judge_service.list_judges_for_event(db, event.id)
+        data.judges = [await judge_service.to_read(db, j) for j in judges]
 
     if stages:
         ordered = sorted(stages, key=lambda s: s.order_index)
@@ -101,6 +123,17 @@ async def update_event(db: AsyncSession, event: Event, data: EventUpdate, actor:
             "Organizers cannot publish or archive events directly — an admin needs to review it first.",
             status.HTTP_403_FORBIDDEN,
         )
+
+    winning_mode = updates.get("winning_mode", event.winning_mode)
+    if updates.get("status") == EventStatus.PUBLISHED and winning_mode == WinningMode.JUDGE_SCORE:
+        judges = await judge_service.list_judges_for_event(db, event.id)
+        if len(judges) < judge_service.MIN_JUDGES:
+            raise AppError(
+                "NOT_ENOUGH_JUDGES",
+                f"Assign at least {judge_service.MIN_JUDGES} judge before publishing a judge-scored event.",
+                status.HTTP_400_BAD_REQUEST,
+            )
+
     for field, value in updates.items():
         setattr(event, field, value)
     event.updated_at = datetime.now(timezone.utc)

@@ -80,12 +80,18 @@ export function SiteHeader() {
           <Link href="/gallery" className={linkClass("/gallery")}>
             Gallery
           </Link>
-          <Link href="/pages/whats-new" className={linkClass("/pages/whats-new")}>
+          <Link href="/winners" className={linkClass("/winners")}>
+            Winners
+          </Link>
+          <Link href="/organizers" className={linkClass("/organizers")}>
+            Organizers
+          </Link>
+          {/* <Link href="/pages/whats-new" className={linkClass("/pages/whats-new")}>
             What&apos;s New
-          </Link>
-          <Link href="/pages/about-us" className={linkClass("/pages/about-us")}>
+          </Link> */}
+          {/* <Link href="/pages/about-us" className={linkClass("/pages/about-us")}>
             About Us
-          </Link>
+          </Link> */}
           <Link href="/upload" className={linkClass("/upload")}>
             Upload
           </Link>

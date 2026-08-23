@@ -21,7 +21,9 @@ from app.routers import (
     event_types,
     events,
     export,
+    judge_scores,
     organizer_applications,
+    organizers,
     prizes,
     reports,
     settings as settings_router,
@@ -32,6 +34,7 @@ from app.routers import (
     topics,
     users,
     votes,
+    winners,
 )
 from app.seed import run_migrations, seed_initial_data
 
@@ -94,6 +97,9 @@ for router in (
     settings_router.router,
     export.router,
     organizer_applications.router,
+    judge_scores.router,
+    winners.router,
+    organizers.router,
 ):
     app.include_router(router, prefix=settings.api_prefix)
 

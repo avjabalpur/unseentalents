@@ -13,6 +13,7 @@ class StageResult(SQLModel, table=True):
     stage_id: uuid.UUID = Field(foreign_key="stages.id", index=True)
     participation_id: uuid.UUID = Field(foreign_key="participations.id", index=True)
     vote_count: int = Field(default=0)
+    judge_score_total: float | None = Field(default=None)
     rank: int
     advanced: bool = Field(default=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=sa.DateTime(timezone=True))

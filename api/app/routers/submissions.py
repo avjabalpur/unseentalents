@@ -7,13 +7,14 @@ from app.core.dependencies import CurrentUser, require_role
 from app.core.errors import AppError
 from app.core.rate_limit import rate_limiter
 from app.db import get_db
-from app.models.enums import MediaType, UserRole, UserStatus
+from app.models.enums import MediaType, UserRole, UserStatus, WinningMode
 from app.models.submission import Submission
 from app.models.user import User
 from app.schemas.submission import BulkModerateRequest, SubmissionRead
 from app.services import (
     event_service,
     event_type_service,
+    judge_score_service,
     participation_service,
     stage_service,
     submission_service,
@@ -28,11 +29,15 @@ _upload_rate_limit = rate_limiter("upload", limit=10, window_seconds=60)
 async def _to_read(db: AsyncSession, submission: Submission) -> SubmissionRead:
     vote_count = await submission_service.count_votes(db, submission.id)
     owner = await submission_service.get_owner(db, submission)
+    judge_scores = await judge_score_service.list_scores_for_submission(db, submission.id)
     data = SubmissionRead.model_validate(submission)
     data.vote_count = vote_count
     if owner is not None:
         data.owner_name = owner.name
         data.owner_username = owner.username
+    if judge_scores:
+        data.judge_scores = [await judge_score_service.to_read(db, s) for s in judge_scores]
+        data.judge_score_total = sum(s.score for s in judge_scores)
     return data
 
 
@@ -64,9 +69,14 @@ async def list_submissions(stage_id: uuid.UUID, db: AsyncSession = Depends(get_d
 
 @router.get("/stages/{stage_id}/leaderboard", response_model=list[SubmissionRead])
 async def leaderboard(stage_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    stage = await stage_service.get_stage_or_404(db, stage_id)
+    event = await event_service.get_event_or_404(db, stage.event_id)
     submissions = await submission_service.list_submissions_for_stage(db, stage_id, approved_only=True)
     reads = [await _to_read(db, s) for s in submissions]
-    reads.sort(key=lambda r: r.vote_count, reverse=True)
+    if event.winning_mode == WinningMode.JUDGE_SCORE:
+        reads.sort(key=lambda r: r.judge_score_total or 0, reverse=True)
+    else:
+        reads.sort(key=lambda r: r.vote_count, reverse=True)
     return reads
 
 

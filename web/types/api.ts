@@ -14,6 +14,7 @@ export type StageName =
   | "TOP_5"
   | "WINNER";
 export type AdvanceMode = "AUTO_TOP_N" | "ADMIN_CURATED";
+export type WinningMode = "AUDIENCE_VOTE" | "JUDGE_SCORE" | "ADMIN_CURATED";
 export type ParticipationStatus = "ACTIVE" | "ELIMINATED" | "WINNER";
 export type ProcessingStatus = "PENDING" | "PROCESSING" | "READY" | "FAILED";
 export type SubmissionStatus = "PENDING_MODERATION" | "APPROVED" | "REJECTED";
@@ -59,15 +60,66 @@ export interface Event {
   description: string | null;
   eventTypeId: string;
   status: EventStatus;
+  winningMode: WinningMode;
   createdAt: string;
   createdBy: string;
   creatorName: string | null;
   creatorRole: UserRole | null;
+  judges: EventJudge[];
   computedStatus: ComputedEventStatus | null;
   currentStageName: StageName | null;
   firstStageStartAt: string | null;
   finalStageEndAt: string | null;
   stages: Stage[];
+}
+
+export interface EventJudge {
+  id: string;
+  eventId: string;
+  userId: string;
+  judgeName: string | null;
+  judgeUsername: string | null;
+  createdAt: string;
+}
+
+export interface JudgeScore {
+  id: string;
+  submissionId: string;
+  judgeId: string;
+  judgeName: string | null;
+  score: number;
+  comment: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Winner {
+  participationId: string;
+  userId: string;
+  userName: string;
+  userUsername: string;
+  userAvatarKey: string | null;
+  eventId: string;
+  eventName: string;
+  eventTypeId: string;
+  eventTypeName: string;
+  submission: Submission | null;
+  wonAt: string;
+}
+
+export interface OrganizerPublic {
+  id: string;
+  name: string;
+  username: string;
+  avatarKey: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  twitterUrl: string | null;
+  publishedEventCount: number;
+}
+
+export interface OrganizerProfile extends OrganizerPublic {
+  events: Event[];
 }
 
 export interface Stage {
@@ -158,6 +210,8 @@ export interface Submission {
   rejectionReason: string | null;
   uploadedAt: string;
   voteCount: number;
+  judgeScoreTotal: number | null;
+  judgeScores: JudgeScore[];
   ownerName: string | null;
   ownerUsername: string | null;
   eventId: string | null;
@@ -232,6 +286,7 @@ export interface StageResult {
   stageId: string;
   participationId: string;
   voteCount: number;
+  judgeScoreTotal: number | null;
   rank: number;
   advanced: boolean;
 }

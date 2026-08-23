@@ -2,6 +2,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import UploadFile, status
+from sqlalchemy import or_
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -28,6 +29,17 @@ async def list_users(db: AsyncSession, limit: int | None = None, offset: int = 0
     if limit is not None:
         query = query.limit(limit)
     result = await db.exec(query)
+    return list(result.all())
+
+
+async def search_users(db: AsyncSession, query_text: str, limit: int = 10) -> list[User]:
+    pattern = f"%{query_text}%"
+    result = await db.exec(
+        select(User)
+        .where(User.status == UserStatus.ACTIVE, or_(User.username.ilike(pattern), User.name.ilike(pattern)))
+        .order_by(User.name)
+        .limit(limit)
+    )
     return list(result.all())
 
 

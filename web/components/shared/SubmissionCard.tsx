@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Flag, History, ThumbsUp } from "lucide-react";
-import type { Submission } from "@/types/api";
+import { Flag, History, Star, ThumbsUp } from "lucide-react";
+import type { Submission, WinningMode } from "@/types/api";
 import { ApiError, mediaUrl } from "@/lib/api-client";
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
@@ -92,9 +92,10 @@ interface SubmissionCardProps {
   submission: Submission;
   rank?: number;
   action?: React.ReactNode;
+  winningMode?: WinningMode;
 }
 
-export function SubmissionCard({ submission, rank, action }: SubmissionCardProps) {
+export function SubmissionCard({ submission, rank, action, winningMode = "AUDIENCE_VOTE" }: SubmissionCardProps) {
   const { user } = useAuth();
   const [historyOpen, setHistoryOpen] = useState(false);
   const { data: history, isLoading: historyLoading } = useSubmissionHistory(
@@ -140,8 +141,18 @@ export function SubmissionCard({ submission, rank, action }: SubmissionCardProps
       </CardContent>
       <CardContent className="flex items-center justify-between py-3">
         <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-          <ThumbsUp className="size-4" />
-          {submission.voteCount} vote{submission.voteCount === 1 ? "" : "s"}
+          {winningMode === "JUDGE_SCORE" ? (
+            <>
+              <Star className="size-4" />
+              {submission.judgeScoreTotal ?? 0} pts ({submission.judgeScores.length} judge
+              {submission.judgeScores.length === 1 ? "" : "s"})
+            </>
+          ) : (
+            <>
+              <ThumbsUp className="size-4" />
+              {submission.voteCount} vote{submission.voteCount === 1 ? "" : "s"}
+            </>
+          )}
         </span>
         <div className="flex items-center">
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>

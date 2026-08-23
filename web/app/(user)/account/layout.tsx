@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Briefcase, KeyRound, ThumbsUp, User as UserIcon, Video } from "lucide-react";
+import { Briefcase, Gavel, KeyRound, ThumbsUp, User as UserIcon, Video } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +13,7 @@ const NAV = [
   { href: "/account/password", label: "Change Password", icon: KeyRound },
   { href: "/account/uploads", label: "My Uploads", icon: Video },
   { href: "/account/votes", label: "My Votes", icon: ThumbsUp },
+  { href: "/account/judging", label: "My Judging", icon: Gavel },
   { href: "/account/organizer", label: "Become an Organizer", icon: Briefcase },
 ];
 
