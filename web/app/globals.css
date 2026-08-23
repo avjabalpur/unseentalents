@@ -142,6 +142,7 @@
    Applied on a wrapper inside app/admin/layout.tsx so `bg-background`, `text-foreground`,
    `bg-sidebar`, etc. resolve differently there without touching the public site's :root. */
 .admin-dark {
+  --radius: 0.85rem;
   --background: #0c111d;
   --foreground: #ffffff;
   --card: #161b26;
@@ -154,16 +155,18 @@
   --muted-foreground: #8f94a3;
   --accent: #1f242f;
   --accent-foreground: #ffffff;
-  --border: rgba(112, 0, 255, 0.16);
-  --input: rgba(112, 0, 255, 0.22);
+  --border: rgba(112, 0, 255, 0.08);
+  --input: rgba(112, 0, 255, 0.16);
   --sidebar: #080b14;
   --sidebar-foreground: #ffffff;
   --sidebar-accent: #161b26;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(112, 0, 255, 0.16);
+  --sidebar-border: rgba(112, 0, 255, 0.08);
+  --surface-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .admin-light {
+  --radius: 0.85rem;
   --background: #f5f4fa;
   --foreground: #171426;
   --card: #ffffff;
@@ -176,13 +179,35 @@
   --muted-foreground: #6c6b85;
   --accent: #e6e1f9;
   --accent-foreground: #171426;
-  --border: rgba(112, 0, 255, 0.16);
-  --input: rgba(112, 0, 255, 0.22);
+  --border: rgba(112, 0, 255, 0.07);
+  --input: rgba(112, 0, 255, 0.14);
   --sidebar: #ffffff;
   --sidebar-foreground: #171426;
   --sidebar-accent: #ece9f7;
   --sidebar-accent-foreground: #171426;
-  --sidebar-border: rgba(112, 0, 255, 0.14);
+  --sidebar-border: rgba(112, 0, 255, 0.06);
+  --surface-shadow: 0 1px 2px rgba(23, 20, 38, 0.04), 0 16px 40px -16px rgba(23, 20, 38, 0.18), 0 0 0 1px rgba(23, 20, 38, 0.04);
+}
+
+/* Admin/Organizer panels: floating surfaces get a soft shadow instead of the
+   public site's ring/border outline — matches the borderless, rounded reference look. */
+.admin-light [data-slot="card"],
+.admin-dark [data-slot="card"],
+.admin-light [data-slot="dropdown-menu-content"],
+.admin-dark [data-slot="dropdown-menu-content"],
+.admin-light [data-slot="dropdown-menu-sub-content"],
+.admin-dark [data-slot="dropdown-menu-sub-content"],
+.admin-light [data-slot="select-content"],
+.admin-dark [data-slot="select-content"],
+.admin-light [data-slot="dialog-content"],
+.admin-dark [data-slot="dialog-content"] {
+  box-shadow: var(--surface-shadow);
+}
+
+.admin-light [data-slot="sheet-content"],
+.admin-dark [data-slot="sheet-content"] {
+  border-left-width: 0;
+  box-shadow: var(--surface-shadow);
 }
 
 @keyframes kenburns {

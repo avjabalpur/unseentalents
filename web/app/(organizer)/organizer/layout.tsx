@@ -13,6 +13,7 @@ import {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  QrCode,
   ShieldCheck,
   Sun,
   UserRound,
@@ -38,6 +39,7 @@ const NAV_LINKS = [
   { href: "/organizer", label: "My Events", icon: CalendarRange },
   { href: "/organizer/moderation", label: "Moderation", icon: ShieldCheck },
   { href: "/organizer/reports", label: "Reports", icon: Flag },
+  { href: "/organizer/qr-code", label: "QR Code", icon: QrCode },
 ];
 
 export default function OrganizerLayout({ children }: { children: React.ReactNode }) {
@@ -90,7 +92,7 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
   if (isLoading || !user || user.role !== "ORGANIZER") {
     return (
       <div className={cn("flex min-h-screen bg-background", themeClass)}>
-        <aside className="flex h-screen w-64 shrink-0 flex-col gap-2 border-r border-sidebar-border bg-sidebar p-4">
+        <aside className="flex h-screen w-64 shrink-0 flex-col gap-2 bg-sidebar p-4">
           <Skeleton className="mb-4 h-9 w-32" />
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-full rounded-lg" />
@@ -113,11 +115,11 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
     <div className={cn("flex min-h-screen bg-background text-foreground", themeClass)}>
       <aside
         className={cn(
-          "sticky top-0 flex h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200",
+          "sticky top-0 flex h-screen shrink-0 flex-col bg-sidebar transition-[width] duration-200",
           sidebarCollapsed ? "w-[76px]" : "w-64",
         )}
       >
-        <Link href="/" className="flex h-[65px] shrink-0 items-center border-b border-sidebar-border px-5">
+        <Link href="/" className="flex h-[65px] shrink-0 items-center px-5">
           {sidebarCollapsed ? <BrandMark /> : <Brand className="text-xl item-left" />}
         </Link>
 
@@ -131,10 +133,10 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
                 href={item.href}
                 title={sidebarCollapsed ? item.label : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
                   isActive
-                    ? "border-primary bg-gradient-to-r from-primary/15 to-transparent font-medium text-foreground shadow-sm shadow-primary/10"
-                    : "text-muted-foreground hover:translate-x-0.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    ? "bg-primary/12 font-medium text-primary"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 )}
               >
                 <Icon className={cn("size-4.5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
@@ -143,10 +145,22 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
             );
           })}
         </nav>
+
+        <div className="shrink-0 border-t border-sidebar-border p-3">
+          <button
+            type="button"
+            title={sidebarCollapsed ? "Log out" : undefined}
+            onClick={() => logout().then(() => router.push("/"))}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm tracking-wide uppercase text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
+          >
+            <LogOut className="size-4.5 shrink-0" />
+            <span className={cn(sidebarCollapsed && "hidden")}>Log out</span>
+          </button>
+        </div>
       </aside>
 
       <div className="flex-1">
-        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/80 px-6 py-3 backdrop-blur-sm">
+        <header className="sticky top-0 z-10 flex items-center gap-3 bg-sidebar/95 px-6 py-3 shadow-[var(--surface-shadow)] backdrop-blur-sm">
           <Button
             variant="ghost"
             size="icon-sm"

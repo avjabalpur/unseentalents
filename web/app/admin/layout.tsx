@@ -20,14 +20,17 @@ import {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  QrCode,
   Search,
   Settings,
   ShieldCheck,
+  SlidersHorizontal,
   Sun,
   Tags,
   Ticket,
   UserRound,
   Users as UsersIcon,
+  Wrench,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { usePendingSubmissions, useAdminContactMessages, useAdminReports } from "@/lib/hooks/useAdmin";
@@ -55,20 +58,34 @@ const NAV_LINKS = [
   { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck, adminOnly: false },
   { href: "/admin/reports", label: "Reports", icon: Flag, adminOnly: false },
   { href: "/admin/users", label: "Users", icon: UsersIcon, adminOnly: true },
-];
-
-const CONFIG_LINKS = [
   { href: "/admin/organizer-applications", label: "Organizer Applications", icon: IdCard, adminOnly: true },
-  { href: "/admin/topics", label: "Topics", icon: FileText, adminOnly: true },
-  { href: "/admin/slides", label: "Hero Slider", icon: GalleryHorizontal, adminOnly: true },
-  { href: "/admin/announcements", label: "Announcements", icon: Megaphone, adminOnly: true },
-  { href: "/admin/coupons", label: "Coupons", icon: Ticket, adminOnly: true },
   { href: "/admin/contact", label: "Contact Messages", icon: Mail, adminOnly: true },
   { href: "/admin/activity", label: "Activity", icon: Activity, adminOnly: true },
-  { href: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },
 ];
 
-const ALL_NAV_ITEMS = [...NAV_LINKS, ...CONFIG_LINKS];
+const NAV_GROUPS = [
+  {
+    key: "configuration",
+    label: "Configuration",
+    icon: SlidersHorizontal,
+    items: [
+      { href: "/admin/topics", label: "Topics", icon: FileText, adminOnly: true },
+      { href: "/admin/slides", label: "Hero Slider", icon: GalleryHorizontal, adminOnly: true },
+      { href: "/admin/announcements", label: "Announcements", icon: Megaphone, adminOnly: true },
+      { href: "/admin/coupons", label: "Coupons", icon: Ticket, adminOnly: true },
+    ],
+  },
+  {
+    key: "tools",
+    label: "Tools",
+    icon: Wrench,
+    items: [{ href: "/admin/qr-code", label: "QR Code", icon: QrCode, adminOnly: true }],
+  },
+];
+
+const SETTINGS_LINK = { href: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true };
+
+const ALL_NAV_ITEMS = [...NAV_LINKS, ...NAV_GROUPS.flatMap((g) => g.items), SETTINGS_LINK];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
@@ -77,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [configOpen, setConfigOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -85,7 +102,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isAdmin = user?.role === "ADMIN";
   const hasAdminAccess = user?.role === "ADMIN" || user?.role === "MODERATOR";
   const visibleNavLinks = NAV_LINKS.filter((l) => !l.adminOnly || isAdmin);
-  const visibleConfigLinks = CONFIG_LINKS.filter((l) => !l.adminOnly || isAdmin);
+  const showSettingsLink = !SETTINGS_LINK.adminOnly || isAdmin;
+  const visibleGroups = NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((l) => !l.adminOnly || isAdmin),
+  })).filter((g) => g.items.length > 0);
 
   const { data: pendingSubmissions } = usePendingSubmissions();
   const { data: contactMessages } = useAdminContactMessages(isAdmin);
@@ -121,8 +142,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [theme]);
 
   useEffect(() => {
+    const active = NAV_GROUPS.find((g) => g.items.some((l) => pathname === l.href));
     // eslint-disable-next-line react-hooks/set-state-in-effect -- auto-expand the group containing the active route
-    if (CONFIG_LINKS.some((l) => pathname === l.href)) setConfigOpen(true);
+    if (active) setOpenGroups((prev) => ({ ...prev, [active.key]: true }));
   }, [pathname]);
 
   useEffect(() => {
@@ -162,9 +184,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isLoading || !user || !hasAdminAccess) {
     return (
       <div className={cn("flex min-h-screen bg-background", themeClass)}>
-        <aside className="flex h-screen w-64 shrink-0 flex-col gap-2 border-r border-sidebar-border bg-sidebar p-4">
+        <aside className="flex h-screen w-64 shrink-0 flex-col gap-2 bg-sidebar p-4">
           <Skeleton className="mb-4 h-9 w-32" />
-          {Array.from({ length: 9 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-full rounded-lg" />
           ))}
         </aside>
@@ -185,11 +207,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className={cn("flex min-h-screen bg-background text-foreground", themeClass)}>
       <aside
         className={cn(
-          "sticky top-0 flex h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200",
+          "sticky top-0 flex h-screen shrink-0 flex-col bg-sidebar transition-[width] duration-200",
           sidebarCollapsed ? "w-[76px]" : "w-64",
         )}
       >
-        <Link href="/" className="flex h-[65px] shrink-0 items-center border-b border-sidebar-border px-5">
+        <Link href="/" className="flex h-[65px] shrink-0 items-center px-5">
           {sidebarCollapsed ? <BrandMark /> : <Brand className="text-xl item-left" />}
         </Link>
 
@@ -203,10 +225,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 title={sidebarCollapsed ? item.label : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
                   isActive
-                    ? "border-primary bg-gradient-to-r from-primary/15 to-transparent font-medium text-foreground shadow-sm shadow-primary/10"
-                    : "text-muted-foreground hover:translate-x-0.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    ? "bg-primary/12 font-medium text-primary"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 )}
               >
                 <Icon className={cn("size-4.5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
@@ -215,63 +237,100 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
 
-          {visibleConfigLinks.length > 0 && (
-            <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
-              <CollapsibleTrigger
-                render={
-                  <button
-                    type="button"
-                    title={sidebarCollapsed ? "Configuration" : undefined}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
-                      visibleConfigLinks.some((l) => pathname === l.href)
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    )}
-                  >
-                    <Settings className="size-4.5 shrink-0 text-muted-foreground" />
-                    <span className={cn("flex-1 text-left", sidebarCollapsed && "hidden")}>Configuration</span>
-                    <ChevronDown
+          {visibleGroups.map((group) => {
+            const GroupIcon = group.icon;
+            const isOpen = !!openGroups[group.key];
+            return (
+              <Collapsible
+                key={group.key}
+                open={isOpen}
+                onOpenChange={(open) => setOpenGroups((prev) => ({ ...prev, [group.key]: open }))}
+              >
+                <CollapsibleTrigger
+                  render={
+                    <button
+                      type="button"
+                      title={sidebarCollapsed ? group.label : undefined}
                       className={cn(
-                        "size-4 shrink-0 text-muted-foreground transition-transform",
-                        configOpen && "rotate-180",
-                        sidebarCollapsed && "hidden",
+                        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
+                        group.items.some((l) => pathname === l.href)
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                       )}
-                    />
-                  </button>
-                }
-              />
-              <CollapsiblePanel>
-                <div className={cn("space-y-1 pt-1", !sidebarCollapsed && "pl-5")}>
-                  {visibleConfigLinks.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        title={sidebarCollapsed ? item.label : undefined}
+                    >
+                      <GroupIcon className="size-4.5 shrink-0 text-muted-foreground" />
+                      <span className={cn("flex-1 text-left", sidebarCollapsed && "hidden")}>{group.label}</span>
+                      <ChevronDown
                         className={cn(
-                          "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm tracking-wide uppercase transition-all",
-                          isActive
-                            ? "border-primary bg-gradient-to-r from-primary/15 to-transparent font-medium text-foreground"
-                            : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                          "size-4 shrink-0 text-muted-foreground transition-transform",
+                          isOpen && "rotate-180",
+                          sidebarCollapsed && "hidden",
                         )}
-                      >
-                        <Icon className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-                        <span className={cn(sidebarCollapsed && "hidden")}>{item.label}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </CollapsiblePanel>
-            </Collapsible>
-          )}
+                      />
+                    </button>
+                  }
+                />
+                <CollapsiblePanel>
+                  <div className={cn("space-y-1 pt-1", !sidebarCollapsed && "pl-5")}>
+                    {group.items.map((item) => {
+                      const isActive = pathname === item.href;
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          title={sidebarCollapsed ? item.label : undefined}
+                          className={cn(
+                            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm tracking-wide uppercase transition-all",
+                            isActive
+                              ? "bg-primary/12 font-medium text-primary"
+                              : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                          )}
+                        >
+                          <Icon className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                          <span className={cn(sidebarCollapsed && "hidden")}>{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </CollapsiblePanel>
+              </Collapsible>
+            );
+          })}
         </nav>
+
+        <div className="shrink-0 space-y-1 border-t border-sidebar-border p-3">
+          {showSettingsLink && (
+            <Link
+              href={SETTINGS_LINK.href}
+              title={sidebarCollapsed ? SETTINGS_LINK.label : undefined}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm tracking-wide uppercase transition-all",
+                pathname === SETTINGS_LINK.href
+                  ? "bg-primary/12 font-medium text-primary"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              )}
+            >
+              <Settings
+                className={cn("size-4.5 shrink-0", pathname === SETTINGS_LINK.href ? "text-primary" : "text-muted-foreground")}
+              />
+              <span className={cn(sidebarCollapsed && "hidden")}>{SETTINGS_LINK.label}</span>
+            </Link>
+          )}
+          <button
+            type="button"
+            title={sidebarCollapsed ? "Log out" : undefined}
+            onClick={() => logout().then(() => router.push("/"))}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm tracking-wide uppercase text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
+          >
+            <LogOut className="size-4.5 shrink-0" />
+            <span className={cn(sidebarCollapsed && "hidden")}>Log out</span>
+          </button>
+        </div>
       </aside>
 
       <div className="flex-1">
-        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/80 px-6 py-3 backdrop-blur-sm">
+        <header className="sticky top-0 z-10 flex items-center gap-3 bg-sidebar/95 px-6 py-3 shadow-[var(--surface-shadow)] backdrop-blur-sm">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -293,14 +352,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               onFocus={() => setSearchOpen(true)}
               onBlur={() => setTimeout(() => setSearchOpen(false), 120)}
               placeholder="Search or type command..."
-              className="h-9 w-full rounded-lg border border-input bg-muted/40 pr-14 pl-9 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/20"
+              className="h-9 w-full rounded-xl bg-muted/60 pr-14 pl-9 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-3 focus:ring-ring/20"
             />
-            <kbd className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <kbd className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
               ⌘K
             </kbd>
 
             {searchOpen && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 z-20 mt-1.5 w-full overflow-hidden rounded-lg border border-border bg-popover py-1 shadow-lg">
+              <div className="absolute top-full left-0 z-20 mt-1.5 w-full overflow-hidden rounded-xl bg-popover py-1 shadow-[var(--surface-shadow)]">
                 {searchResults.map((item) => (
                   <button
                     key={item.href}
